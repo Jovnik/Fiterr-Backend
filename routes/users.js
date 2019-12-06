@@ -43,22 +43,26 @@ router.post('/register', async (req, res) => {
 });
 
 router.post('/login', (req, res, next) => {
-  console.log(req.body)
-  passport.authenticate('local', (err, user) => {
-    if (err) {
-      return next()
-    }
-    if (!user) {
-      next()
-    }
-    req.login(user, function(err) {
+  try {
+    passport.authenticate('local', (err, user) => {
       if (err) {
         return next()
       }
-      next()
-    })
-  })(req, res, next)
-  res.status(200).send(req.user)
+      if (!user) {
+        next()
+      }
+      req.login(user, function(err) {
+        if (err) {
+          return next()
+        }
+        next()
+      })
+    })(req, res, next)
+    res.status(200).send(req.user)
+  } catch (error) {
+    res.status(403).send(err)
+  }
+  
 });
 
 
