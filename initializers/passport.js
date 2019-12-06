@@ -12,25 +12,25 @@ const User = require('../models/User')
 passport.use(
   new LocalStrategy({usernameField: 'email'}, async (email, password, done) => {
     try {
-      const user = await User.findOne({email: email})
-      if (!user) { return done(null, false, {message: "Email Not Registered"}) }
+      const user = await User.findOne({ email })
+
+      if (!user) { return done(null, false, {message: 'Email is not registered'}) }
 
       // If user matches
       const isMatch = await bcrypt.compare(password, user.password)
       if (isMatch) { return done(null, user) }
       else {
-        return done(null, false, {message: 'Password Incorrect'})
+        return done(null, false, {message: 'Password is invalid'})
       }
     }
     catch(err) {
       console.log(err)
+      return done(err);    
     }
-    
   })
 )
 
 passport.serializeUser((user, done) => {
-  console.log(user)
   done(null, user._id)
 })
 

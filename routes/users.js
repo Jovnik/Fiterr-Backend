@@ -39,28 +39,17 @@ router.post('/register', async (req, res) => {
         console.error(err.message);
         res.status(400).send('Server error');
     }
-
 });
 
-router.post('/login', (req, res, next) => {
-  console.log(req.body)
-  passport.authenticate('local', (err, user) => {
-    if (err) {
-      return next()
-    }
-    if (!user) {
-      next()
-    }
-    req.login(user, function(err) {
-      if (err) {
-        return next()
-      }
-      next()
-    })
-  })(req, res, next)
-  res.status(200).send(req.user)
-});
-
+router.post('/login',
+  (req, res) => {
+    passport.authenticate('local', (err, user, info) => {
+      if (err) { res.status(500).send(err) } // server error (eg. cant fetch data)
+      else if (info) { res.send(info) }   // login error messages from the local strategy
+      else { res.status(200).send(req.user) } // if you the log in credentials arent valid, the string 'Unauthorized' is stored in req.user
+    })(req, res);
+  }
+)
 
 router.get('/test', (req, res) => {
   res.json({ msg: 'Testing for req.user'})
