@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const connectDB = require('./config/db');
-
+const cors = require('cors')
 const session = require('express-session')
 const MongoStore = require('connect-mongo')(session)
 
@@ -13,7 +13,7 @@ const app = express();
 
 connectDB();
 
-app.use(morgan('tiny'));
+app.use(morgan('dev'));
 
 app.use(express.json());
 
@@ -29,6 +29,11 @@ app.use(
       }
     }),
 )
+
+//cors 
+app.use(cors({
+  credentials:true 
+}))
 
 // passport
 const passport = require('./initializers/passport');

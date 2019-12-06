@@ -5,30 +5,33 @@ const bcrypt = require('bcryptjs')
 // models
 const User = require('../models/User')
 
-const validPassword = async (password, hash) => {
-  return await bcrypt.compare(password, hash)
-}
+// const validPassword = async (password, hash) => {
+//   return await bcrypt.compare(password, hash)
+// }
 
 passport.use(
-  new LocalStrategy(function(email, password, done) {
-    User.findOne({ email }, async function(err, user) {
-      if (err) {
-        return done(err)
+  new LocalStrategy({usernameField: 'email'}, async (email, password, done) => {
+    try {
+      const user = await User.findOne({email: email})
+      if (!user) { return done(null, false, {message: "Email Not Registered"}) }
+
+      // If user matches
+      const isMatch = await bcrypt.compare(password, user.password)
+      if (isMatch) { return done(null, user) }
+      else {
+        return done(null, false, {message: 'Password Incorrect'})
       }
-      if (!user) {
-        return done(null, false, { message: 'Incorrect username.' })
-      }
-      const checkPassword = await validPassword(password, user.password)
-      if (!checkPassword) {
-        return done(null, false, { message: 'Incorrect password.' })
-      }
-      return done(null, user)
-    })
-  }),
+    }
+    catch(err) {
+      console.log(err)
+    }
+    
+  })
 )
 
 passport.serializeUser((user, done) => {
-  done(null, user.id)
+  console.log(user)
+  done(null, user._id)
 })
 
 passport.deserializeUser((id, done) => {

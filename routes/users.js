@@ -43,6 +43,7 @@ router.post('/register', async (req, res) => {
 });
 
 router.post('/login', (req, res, next) => {
+  console.log(req.body)
   passport.authenticate('local', (err, user) => {
     if (err) {
       return next()
@@ -57,6 +58,7 @@ router.post('/login', (req, res, next) => {
       next()
     })
   })(req, res, next)
+  res.status(200).send(req.user)
 });
 
 
