@@ -37,14 +37,11 @@ const UserSchema = mongoose.Schema({
         type: Boolean,
         default: false
     },
-    following: {
-        type: [mongoose.Schema.Types.ObjectId],
-        ref: 'users'
-    },
-    followers: {
-        type: [mongoose.Schema.Types.ObjectId],
-        ref: 'users'
+    profile: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'profile'
     }
+    
 })
 
 module.exports = mongoose.model('user', UserSchema);

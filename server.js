@@ -42,6 +42,7 @@ app.use(passport.session());    // for persistent login sessions
 
 // Routes
 app.use('/api/users', require('./routes/users'));
+app.use('/api/profiles', require('./routes/profiles'))
 
 app.listen(PORT, () => console.log(`Now listening on port ${PORT} ✔️`));
 
