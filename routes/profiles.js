@@ -4,7 +4,6 @@ const User = require('../models/User');
 const Profile = require('../models/Profile')
 const passport = require('passport')
 const multer = require('multer');
-const storage = multer.memoryStorage()
 const AWS = require('aws-sdk');
 require('dotenv').config()
 const mongoose = require('mongoose')
@@ -42,7 +41,7 @@ router.post('/create', upload, async (req,res) => {
         ACL: 'public-read',
         ContentType: image[0].mimetype
     }
-    s3credentials.upload(fileParams, (err, data) => {
+    s3credentials.upload(fileParams, async(err, data) => {
         if (err) {
             res.send(err)
         } else {
@@ -62,3 +61,5 @@ router.post('/create', upload, async (req,res) => {
         }
     })
 })
+
+module.exports = router;
