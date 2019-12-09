@@ -16,14 +16,9 @@ router.post('/register', async (req, res) => {
         }
         
         const hash = await bcrypt.hash(password, 10);
-
         user = new User(req.body);
-
         user.password = hash;
-        
         await user.save()
-
-        // res.send(user);
 
         req.login(user, (err) => {
           if (err) {
@@ -33,20 +28,26 @@ router.post('/register', async (req, res) => {
           }
         })
 
-        console.log(req.user);  //after calling req.login on the backend, you have access to req.user in any route
-
     } catch (err) {
         console.error(err.message);
         res.status(400).send('Server error');
     }
 });
 
-router.post('/login',
-  (req, res) => {
+
+router.post('/login', (req, res) => {
+
     passport.authenticate('local', (err, user, info) => {
       if (err) { res.status(500).send(err) } // server error (eg. cant fetch data)
-      else if (info) { res.send(info) }   // login error messages from the local strategy
-      else { res.status(200).send(req.user) } // if you the log in credentials arent valid, the string 'Unauthorized' is stored in req.user
+      else if (info) { return res.send(info) }   // login error messages from the local strategy (email not registered or password invalid)
+      else {   
+        console.log('at this point a user has been found in the local strategy');
+        req.login(user, (err) => {
+          if(err) { return res.status(500).send(err) } // is this a different error to the 500 above?
+        });    
+        // now have access to req.user after logging in
+        return res.status(200).json(req.user); 
+      }
     })(req, res);
   }
 )
