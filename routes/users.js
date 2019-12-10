@@ -36,12 +36,13 @@ router.post('/register', async (req, res) => {
 
 
 router.post('/login', (req, res) => {
+    console.log('asdfasdfasdf');
 
     passport.authenticate('local', (err, user, info) => {
       if (err) { res.status(500).send(err) } // server error (eg. cant fetch data)
       else if (info) { return res.send(info) }   // login error messages from the local strategy (email not registered or password invalid)
       else {   
-        console.log('at this point a user has been found in the local strategy');
+        // console.log('at this point a user has been found in the local strategy');
         req.login(user, (err) => {
           if(err) { return res.status(500).send(err) } // is this a different error to the 500 above?
         });    
@@ -53,14 +54,17 @@ router.post('/login', (req, res) => {
 )
 
 router.get('/test', (req, res) => {
-  res.json({ msg: 'Testing for req.user'})
   console.log(req.user);
+  res.json({ msg: 'Testing for req.user'})
 })  
 
 
 router.get('/logout', (req, res) => {
+  console.log('logged out');
+  console.log('1', req.user);
   req.logout();
-  res.send('logged out')
+  console.log('2', req.user);
+  res.status(200).send('logged out')
 })
 
 
