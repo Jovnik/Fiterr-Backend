@@ -32,7 +32,8 @@ app.use(
 
 //cors 
 app.use(cors({
-  credentials:true 
+  origin: "http://localhost:3000",
+  credentials: true
 }))
 
 // passport
@@ -43,6 +44,8 @@ app.use(passport.session());    // for persistent login sessions
 // Routes
 app.use('/api/users', require('./routes/users'));
 app.use('/api/profiles', require('./routes/profiles'))
+app.use('/api/auth', require('./routes/auth'))
+
 
 app.listen(PORT, () => console.log(`Now listening on port ${PORT} ✔️`));
 
