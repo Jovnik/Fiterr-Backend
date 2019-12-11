@@ -28,38 +28,46 @@ let s3credentials = new AWS.S3({
 
 
 router.post('/create', upload, async (req,res) => {
-    passport.authenticate('local')
-    const {aboutMe, fitnessInterests} = req.body
-    const image = req.files
-    const uniqueValue = req.user.id
+    try{
+        const {aboutMe, fitnessInterests} = req.body
+    
+        const {image} = req.files
+        const uniqueValue = req.user.id
+        const randomNum = Math.floor((Math.random()*10000000000))
 
-    const name = Buffer.from(`${uniqueValue}${image[0].originalname}`).toString('base64')
-    let fileParams = {
-        Bucket: process.env.BUCKET,
-        Body: image[0].buffer,
-        Key: name,
-        ACL: 'public-read',
-        ContentType: image[0].mimetype
-    }
-    s3credentials.upload(fileParams, async(err, data) => {
-        if (err) {
-            res.send(err)
-        } else {
-            const imageUrl= data.Location
-            const newProfile = new Profile({
-                images: [{
-                    imageLink: imageUrl,
-                    displayPhoto: true
-                }],
-                aboutMe: aboutMe,
-                fitnessInterests: fitnessInterests
-            })
-            await newProfile.save()
-            const updateUser = await User.findByIdAndUpdate({_id: req.user.id}, {profile: newProfile.id})
-            await updateUser.save()
-            //at this point redirect to the users dashboard
+        const name = `${image[0].originalname + image[0].size + uniqueValue + randomNum}`
+        console.log(name)
+        let fileParams = {
+            Bucket: process.env.BUCKET,
+            Body: image[0].buffer,
+            Key: name,
+            ACL: 'public-read',
+            ContentType: image[0].mimetype
         }
-    })
+        s3credentials.upload(fileParams, async(err, data) => {
+            if (err) {
+                console.log('eeeee')
+                return res.send(err)
+            } else {
+                const imageUrl= data.Location
+                const newProfile = new Profile({
+                    images: [{
+                        imageLink: imageUrl,
+                        displayPhoto: true
+                    }],
+                    aboutMe: aboutMe,
+                    fitnessInterests: fitnessInterests
+                })
+                await newProfile.save()
+                const updateUser = await User.findByIdAndUpdate({_id: req.user.id}, {profile: newProfile.id})
+                return res.send(newProfile)
+                //at this point redirect to the users dashboard
+            }
+        })
+    }catch(err){
+        console.log(err)
+    }
+    
 })
 
 module.exports = router;
