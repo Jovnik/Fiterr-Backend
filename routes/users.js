@@ -65,7 +65,36 @@ router.get('/logout', (req, res) => {
   req.logout();
   console.log('2', req.user);
   res.status(200).send('logged out')
+});
+
+// this needs to be an authenticated route
+router.post('/search-users', async(req, res) => {
+  const { search } = req.body
+  console.log('The search term is:', search);
+  // this query checks whether the firstname or lastname contains the search term
+  const searchRegex = {"$regex": search, "$options": "i" };
+  let searchResults = await User.find({$or: [{"firstname": searchRegex}, {"lastname": searchRegex}]});
+  console.log(searchResults);
+  res.json({ searchedUsers: searchResults });
 })
 
+router.post('/get-user', async(req, res) => {
+  const ObjectId = require('mongoose').Types.ObjectId;
+  const { id } = req.body;
+  console.log('The id is', id);
+
+  let searchResult;
+  if(ObjectId.isValid(id)){
+    console.log('we have a mongoose id');
+    searchResult = await User.findOne({_id: id});
+  } else {
+    console.log('we dont have a mongoose id');
+    searchResult = await User.findOne({username: id});
+  }
+
+  console.log(searchResult);
+  res.json(searchResult);
+  
+})  
 
 module.exports = router;
