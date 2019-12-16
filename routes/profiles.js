@@ -51,12 +51,11 @@ router.post('/create', upload, async (req,res) => {
             } else {
                 const imageUrl= data.Location
                 const newProfile = new Profile({
-                    images: [{
-                        imageLink: imageUrl,
-                        displayPhoto: true
-                    }],
+                    images: [imageUrl],
+                    displayImage: imageUrl,
                     aboutMe: aboutMe,
-                    fitnessInterests: fitnessInterests
+                    fitnessInterests: fitnessInterests,
+                    user: req.user.id
                 })
                 await newProfile.save()
                 const updateUser = await User.findByIdAndUpdate({_id: req.user.id}, {profile: newProfile.id})
@@ -70,4 +69,9 @@ router.post('/create', upload, async (req,res) => {
     
 })
 
+
+router.get('/', async (req,res)=> {
+    const findProfile = await Profile.findOne({user: req.user._id}).populate('following').populate('followers')
+    res.send(findProfile)
+})
 module.exports = router;
