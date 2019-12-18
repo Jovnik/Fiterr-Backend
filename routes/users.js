@@ -97,4 +97,17 @@ router.post('/get-user', async(req, res) => {
   
 })  
 
+router.get('/following-posts', async(req,res)=>{ //this will go in newsfeed router when matty uploads, needs testing 
+  const following = req.params.following
+  const followingPostsPromises = following.map(async (followID) => {
+    return Post.find({owningUser: followID}).sort({postedAt: -1}).limit(10) //find 10 most recent posts from each user they follow
+  })
+  let followingPosts = Promise.all(followingPostsPromises) // resolve promises of each user's posts
+  followingPosts.flat() // b/c each Post.find returns an array of objects need to flatten 1 level deep
+  const sortedPosts = followingPosts.sort((post1,post2) => {
+    return post2.postedAt - post1.postedAt
+  })
+  res.json(followingPosts)
+})
+
 module.exports = router;
