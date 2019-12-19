@@ -64,7 +64,7 @@ router.post('/create', upload, async (req,res) => {
                 //at this point redirect to the users dashboard
             }
         })
-    }catch(err){
+    } catch(err){
         console.log(err)
     }
     

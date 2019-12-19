@@ -11,7 +11,16 @@ const PostSchema = mongoose.Schema({
             ref: 'comment'
         }
     ],
-    isPrivate: Boolean,
+    isPrivate: {
+        type: Boolean,
+        default: false
+    },
+    title: {
+        type: String,
+    },
+    content: {
+        type: String
+    },
     likes: [
         {
             type: mongoose.Schema.Types.ObjectId,
