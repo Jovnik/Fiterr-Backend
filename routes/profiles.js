@@ -71,7 +71,7 @@ router.post('/create', upload, async (req,res) => {
 
 
 router.get('/', async (req,res)=> {
-    const findProfile = await Profile.findOne({user: req.user._id}).populate('following').populate('followers')
+    const findProfile = await Profile.findOne({user: req.params.id})
     res.send(findProfile)
 })
 module.exports = router;
