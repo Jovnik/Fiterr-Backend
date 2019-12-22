@@ -38,7 +38,6 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', (req, res) => {
     console.log('asdfasdfasdf');
-
     passport.authenticate('local', (err, user, info) => {
       if (err) { res.status(500).send(err) } // server error (eg. cant fetch data)
       else if (info) { return res.send(info) }   // login error messages from the local strategy (email not registered or password invalid)
