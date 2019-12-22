@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
+const Post = require('../models/Post')
 
 router.post('/register', async (req, res) => {
 
@@ -95,5 +96,24 @@ router.post('/get-user', async(req, res) => {
   res.json(searchResult);
   
 })  
+//experimental until matty posts backend routes/Post model fixed
+router.get('/following-posts', async(req,res)=>{ //this will go in newsfeed router when matty uploads, needs testing 
+  console.log(req.query)
+  const following = JSON.parse(req.query.following)
+  const posts = []
+  following.forEach(async (followID) => {
+    response = await Post.find({owningUser: followID}).limit(10) //find 10 most recent posts from each user they follow
+    posts.push(response)
+  })
+  console.log(posts)
+  // console.log('follow proms', followingPostsPromises)
+  // let followingPosts = Promise.all(followingPostsPromises) // resolve promises of each user's posts
+  // console.log('following', followingPosts)
+  followingPosts.flat() // b/c each Post.find returns an array of objects need to flatten 1 level deep
+  const sortedPosts = followingPosts.sort((post1,post2) => {
+    return post2.postedAt - post1.postedAt
+  })
+  res.json(sortedPosts)
+})
 
 module.exports = router;

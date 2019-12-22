@@ -5,22 +5,22 @@ const ProfileSchema = mongoose.Schema({
         type: Boolean,
         default: false
     },
-    following: {
+    following: [{
         type: [mongoose.Schema.Types.ObjectId],
-        ref: 'users'
-    },
-    followers: {
+        ref: 'user'
+    }],
+    followers: [{
         type: [mongoose.Schema.Types.ObjectId],
-        ref: 'users'
-    },
-    images: [
-        {
-            imageLink: String,
-            displayPhoto: {type: Boolean, default: false}
-        }
-    ], 
+        ref: 'user'
+    }],
+    images: [String],
+    displayImage: String, 
     aboutMe: String,
-    fitnessInterests: String
+    fitnessInterests: String,
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'user'
+    }
 })
 
 module.exports = mongoose.model('profile', ProfileSchema);
