@@ -24,15 +24,35 @@ const createPost = async (req, res) => {
     };
     };
 
-/* findPost will be a function that finds all the posts created by the user */
-const findPost = async (req,res) => {
+// /* findPost will be a function that finds all the posts created by the user */
+// const findPost = async (req,res) => {
 
-}
+// }
+
+router.get('/get-user-posts', async(req,res) => {
+    const myPosts = await Post.find({owningUser: req.query.userID})
+    res.json(myPosts)
+})
 
 /* findFollowingPost will be a function that finds 50 posts that the user is following */
-const findFollowingPost = async (req, res) => {
-
-}
+router.get('/following-posts', async(req,res)=>{ //this will go in newsfeed router when matty uploads, needs testing 
+    console.log(req.query)
+    const following = JSON.parse(req.query.following)
+    const posts = []
+    following.forEach(async (followID) => {
+      response = await Post.find({owningUser: followID}).limit(10) //find 10 most recent posts from each user they follow
+      posts.push(response)
+    })
+    console.log(posts)
+    // console.log('follow proms', followingPostsPromises)
+    // let followingPosts = Promise.all(followingPostsPromises) // resolve promises of each user's posts
+    // console.log('following', followingPosts)
+    followingPosts.flat() // b/c each Post.find returns an array of objects need to flatten 1 level deep
+    const sortedPosts = followingPosts.sort((post1,post2) => {
+      return post2.postedAt - post1.postedAt
+    })
+    res.json(sortedPosts)
+})
 
 router.post('/create-post', createPost);
 
