@@ -102,5 +102,4 @@ router.post('/get-viewing-user-profile', async(req, res) => {
   res.json({ user, profile });
 });
 
-
 module.exports = router;
