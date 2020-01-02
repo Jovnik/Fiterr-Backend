@@ -26,6 +26,9 @@ let s3credentials = new AWS.S3({
     secretAccessKey: process.env.SECRETACCESSKEY
 });
 
+
+// @route       /api/profiles/create
+// @desc        Create a profile
 router.post('/create', upload, async (req,res) => {
     try {
         const {aboutMe, fitnessInterests} = req.body
@@ -52,7 +55,7 @@ router.post('/create', upload, async (req,res) => {
                 ContentType: image[0].mimetype
             }
 
-            const data = await s3credentials.upload(fileParams).promise();  //because this is in a trycatch, it will throw an error if detected with the upload - right?
+            const data = await s3credentials.upload(fileParams).promise();  //because this is in a trycatch, error thrown if detected with the upload
 
             imageUrl = data.Location;
             imagesArr = [imageUrl];
@@ -76,17 +79,59 @@ router.post('/create', upload, async (req,res) => {
         return res.send(profile);
 
     } catch(err) {
-        console.log('An error was thrown at some point in the process');
         console.log(err)
-    }
-    
+    } 
 })
 
+// @route       /api/profiles
+// @desc        Get a profile
 router.get('/', async (req,res)=> {
     const id = req.query.id;
     const findProfile = await Profile.findOne({user: id});
-    // console.log('found the profile', findProfile);
+    // console.log('Profile found', findProfile);
     res.send(findProfile)
 })
+
+// @route       /api/profiles/follow/:id
+// @desc        Put our profile id in the following profiles follower field, and put the following id in our profiles following field
+router.get('/follow/:id', async(req, res) => {
+    const followId = req.params.id;     // this is the 'viewingUser's' profile id
+    // console.log('followid', followId); 
+
+    const myProfile = await Profile.findOneAndUpdate({ user: req.user._id }, {$push: {following: followId}}, {new: true});
+    // console.log('MINE', myProfile);
+
+    const followingProfile = await Profile.findByIdAndUpdate(followId, {$push: {followers: myProfile._id}}, {new: true});
+    // console.log('FOLLOWING', followingProfile);
+
+    res.send('Following field updated');
+})
+
+// @route       /api/profiles/unfollow/:id
+// @desc        Remove our profile id from the following profiles follower field and remove the following id from our profiles following field
+router.get('/unfollow/:id', async(req, res) => {
+    const followId = req.params.id;
+    
+    // cant log this, need to check update in atlas
+    await Profile.updateOne({ user: req.user._id }, {$pullAll: {following: [followId]}});
+    // can use $pullAll or $pull - i think $pull only removes one entry where as $pullAll removes all of them
+    
+    await Profile.updateOne({ _id: followId }, {$pullAll: {followers: [req.user.profile]}});
+
+    res.send('Unfollowing updated')
+}) 
+
+// POSTMAN ROUTE ONLY
+// @route       /api/profiles/clear/:id
+// @desc        clear all following and follower ids from the profile
+router.get('/clear/:id', async(req, res) => {
+    console.log('We have the Profile ID: ', req.params.id);
+
+    const profile = await Profile.findOneAndUpdate({_id: req.params.id}, { following: [], followers: [] }, { new: true });
+    console.log('Profile is now:', profile);
+
+    res.send('success');
+})
+
 
 module.exports = router;

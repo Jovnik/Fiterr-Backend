@@ -5,10 +5,6 @@ const bcrypt = require('bcryptjs')
 // models
 const User = require('../models/User')
 
-// const validPassword = async (password, hash) => {
-//   return await bcrypt.compare(password, hash)
-// }
-
 passport.use(
   new LocalStrategy({usernameField: 'email'}, async (email, password, done) => {
     try {

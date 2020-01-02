@@ -3,8 +3,6 @@ const config = require('config');
 // const db = config.get('mongoURI');
 const db = `mongodb+srv://admin:6qbXFW1h4bGloyDd@fiterr-0vezk.mongodb.net/fiterr?retryWrites=true&w=majority`;
 
-// old: 7iMXRHHAMzqHPNJX
-
 const connectDB = async() => {
     try {
         await mongoose.connect(db, { useNewUrlParser: true,  useUnifiedTopology: true });
