@@ -4,7 +4,10 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const Post = require('../models/Post')
+const Profile = require('../models/Profile')
 
+// @route       /api/users/register
+// @desc        Register a user and log them in using passport
 router.post('/register', async (req, res) => {
 
     const { email, password } = req.body;
@@ -35,9 +38,9 @@ router.post('/register', async (req, res) => {
     }
 });
 
-
+// @route       /api/users/login
+// @desc        Login as a user
 router.post('/login', (req, res) => {
-    console.log('asdfasdfasdf');
     passport.authenticate('local', (err, user, info) => {
       if (err) { res.status(500).send(err) } // server error (eg. cant fetch data)
       else if (info) { return res.send(info) }   // login error messages from the local strategy (email not registered or password invalid)
@@ -53,67 +56,51 @@ router.post('/login', (req, res) => {
   }
 )
 
-router.get('/test', (req, res) => {
-  console.log(req.user);
-  res.json({ msg: 'Testing for req.user'})
-})  
-
-
+// @route       /api/users/logout
+// @desc        Logout
+// NOTE: logout behaves strangely through Postman - probably related to express session in some way
 router.get('/logout', (req, res) => {
-  console.log('logged out');
-  console.log('1', req.user);
+  console.log('now logging out...');
   req.logout();
-  console.log('2', req.user);
+  console.log('req.user is now:', req.user);
   res.status(200).send('logged out')
 });
 
-// this needs to be an authenticated route
+// @route       /api/users/search-users
+// @desc        search users in the database with the search term entered
+// Note: this needs to be an authenticated route
 router.post('/search-users', async(req, res) => {
   const { search } = req.body
   console.log('The search term is:', search);
   // this query checks whether the firstname or lastname contains the search term
   const searchRegex = {"$regex": search, "$options": "i" };
   let searchResults = await User.find({$or: [{"firstname": searchRegex}, {"lastname": searchRegex}]});
-  console.log(searchResults);
+  // console.log(searchResults);  // log the users that you find in the search
   res.json({ searchedUsers: searchResults });
 })
 
-router.post('/get-user', async(req, res) => {
+// @route       /api/users/get-user
+// @desc        find both the user and their profile (for when their profile page is viewed on the frontend)
+router.post('/get-viewing-user-profile', async(req, res) => {
   const ObjectId = require('mongoose').Types.ObjectId;
   const { id } = req.body;
-  console.log('The id is', id);
 
-  let searchResult;
+  let user;
   if(ObjectId.isValid(id)){
     console.log('we have a mongoose id');
-    searchResult = await User.findOne({_id: id});
+    user = await User.findOne({_id: id});
   } else {
-    console.log('we dont have a mongoose id');
-    searchResult = await User.findOne({username: id});
+    console.log('we have a username instead');
+    user = await User.findOne({username: id});
   }
+  // console.log(user);
 
-  console.log(searchResult);
-  res.json(searchResult);
-  
-})  
-//experimental until matty posts backend routes/Post model fixed
-router.get('/following-posts', async(req,res)=>{ //this will go in newsfeed router when matty uploads, needs testing 
-  console.log(req.query)
-  const following = JSON.parse(req.query.following)
-  const posts = []
-  following.forEach(async (followID) => {
-    response = await Post.find({owningUser: followID}).limit(10) //find 10 most recent posts from each user they follow
-    posts.push(response)
-  })
-  console.log(posts)
-  // console.log('follow proms', followingPostsPromises)
-  // let followingPosts = Promise.all(followingPostsPromises) // resolve promises of each user's posts
-  // console.log('following', followingPosts)
-  followingPosts.flat() // b/c each Post.find returns an array of objects need to flatten 1 level deep
-  const sortedPosts = followingPosts.sort((post1,post2) => {
-    return post2.postedAt - post1.postedAt
-  })
-  res.json(sortedPosts)
-})
+  //then find the profile by the user id
+  const profile = await Profile.findOne({ user: user._id });
+  // console.log('The profile is:', profile);
+
+  res.json({ user, profile });
+});
+
 
 module.exports = router;

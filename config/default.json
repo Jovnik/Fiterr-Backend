@@ -1,3 +1,4 @@
 {
-    "password": "password"
+    "password": "password",
+    "mongoURI": "mongodb+srv://admin:6qbXFW1h4bGloyDd@fiterr-0vezk.mongodb.net/fiterr?retryWrites=true&w=majority"
 }

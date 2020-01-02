@@ -21,6 +21,9 @@ const PostSchema = mongoose.Schema({
     content: {
         type: String
     },
+    image: {
+        type: String
+    },
     likes: [
         {
             type: mongoose.Schema.Types.ObjectId,
