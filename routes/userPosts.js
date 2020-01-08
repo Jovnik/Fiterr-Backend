@@ -47,8 +47,8 @@ router.get('/following-posts', async(req,res)=>{ //this will go in newsfeed rout
     // console.log('follow proms', followingPostsPromises)
     // let followingPosts = Promise.all(followingPostsPromises) // resolve promises of each user's posts
     // console.log('following', followingPosts)
-    followingPosts.flat() // b/c each Post.find returns an array of objects need to flatten 1 level deep
-    const sortedPosts = followingPosts.sort((post1,post2) => {
+    following.flat() // b/c each Post.find returns an array of objects need to flatten 1 level deep
+    const sortedPosts = following.sort((post1,post2) => {
       return post2.postedAt - post1.postedAt
     })
     res.json(sortedPosts)
