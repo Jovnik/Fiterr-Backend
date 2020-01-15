@@ -5,18 +5,9 @@ const PostSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'user'
     },
-    comments: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'comment'
-        }
-    ],
     isPrivate: {
         type: Boolean,
         default: false
-    },
-    title: {
-        type: String,
     },
     content: {
         type: String
@@ -26,8 +17,26 @@ const PostSchema = mongoose.Schema({
     },
     likes: [
         {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'user'
+            user: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'user'
+            }
+        }
+    ],
+    comments: [
+        {
+            user: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'user'
+            },
+            text: {
+                type: String,
+                required: true
+            },
+            date: {
+                type: Date,
+                default: Date.now
+            }
         }
     ],
     shared: [
@@ -36,9 +45,9 @@ const PostSchema = mongoose.Schema({
             ref: 'user'
         }
     ],
-    postedAt: {
+    date: {
         type: Date,
-        default: Date.now()
+        default: Date.now
     }
 })
 
