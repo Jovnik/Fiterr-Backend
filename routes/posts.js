@@ -37,8 +37,7 @@ const findFollowingPost = async (req, res) => {
 // @desc        Get posts that have been created by you
 router.get('/my-posts', async(req, res) => {
     try {
-        const myPosts = await Post.find({owningUser: req.user._id});
-        // console.log(myPosts);
+        const myPosts = await Post.find({owningUser: req.user._id}).sort({ date: -1 });
         res.send(myPosts);
 
     } catch (err) {
@@ -51,10 +50,10 @@ router.get('/my-posts', async(req, res) => {
 // @desc        Delete a single post
 router.post('/create-post', upload, async (req, res) => {
     try {
-        const {postTitle, postDescription} = req.body;
+        const { postDescription } = req.body;
         const { image } = req.files
 
-        console.log(postTitle, postDescription);
+        console.log(postDescription);
         console.log(image);
 
         let imageUrl = null;
@@ -78,7 +77,6 @@ router.post('/create-post', upload, async (req, res) => {
 
         const newPost = new Post({
             owningUser: req.user._id,
-            title: postTitle,
             content: postDescription,
             image: imageUrl
         });
@@ -86,7 +84,7 @@ router.post('/create-post', upload, async (req, res) => {
         res.send(newPost);
 
     } catch (err) {
-        console.error(err.message);
+        console.error('Error:', err.message);
         res.status(500).send(err)
     };
 });
@@ -104,6 +102,31 @@ router.delete('/delete-post/:id', async(req, res) => {
 
     res.send('removed the post');
 })
+
+
+// @route    PUT api/posts/like/:id   // its a put request because technically we are updating the post
+// @desc     Like a post
+// @access   Private
+router.put('/like/:id', async (req, res) => {
+    try {
+      const post = await Post.findById(req.params.id);
+  
+      // Check if the post has already been liked - is there a better way to do this?
+      if (post.likes.filter(like => like.user.toString() === req.user.id).length > 0) {
+        return res.status(400).json({ msg: 'Post already liked' });
+      }
+  
+      post.likes.unshift({ user: req.user.id });
+  
+      await post.save();
+  
+      res.json(post.likes);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+    }
+  });
+
 
 // @route       /api/posts/viewing-users-posts/:id
 // @desc        Delete a single post

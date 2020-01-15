@@ -3,8 +3,9 @@ const router = express.Router();
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
-const Post = require('../models/Post')
-const Profile = require('../models/Profile')
+const Post = require('../models/Post');
+const Profile = require('../models/Profile');
+const { check, validationResult } = require('express-validator');
 
 // @route       /api/users/register
 // @desc        Register a user and log them in using passport
@@ -40,7 +41,18 @@ router.post('/register', async (req, res) => {
 
 // @route       /api/users/login
 // @desc        Login as a user
-router.post('/login', (req, res) => {
+router.post('/login', [
+  check('email', 'Please include a valid email').isEmail(),
+  check('password', 'Password is required').exists()   
+], async(req, res) => {
+
+    const errors = validationResult(req);
+    
+    if(!errors.isEmpty()){
+      console.log('These are the errors', errors.array());
+      return res.status(400).json({ errors: errors.array() })
+    }
+
     passport.authenticate('local', (err, user, info) => {
       if (err) { res.status(500).send(err) } // server error (eg. cant fetch data)
       else if (info) { return res.send(info) }   // login error messages from the local strategy (email not registered or password invalid)
