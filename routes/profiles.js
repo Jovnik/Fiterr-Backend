@@ -83,11 +83,21 @@ router.post('/create', upload, async (req,res) => {
     } 
 })
 
+// @route       /api/profiles/myprofile
+// @desc        Get my profile thats linked to the logged in user
+router.get('/myprofile', async(req, res) => {
+    console.log('do we have req.user?', req.user)
+    const myProfile = await Profile.findOne({ user: req.user._id });
+    console.log('myProfile is', myProfile);
+    res.send(myProfile);
+})
+
+// THIS IS CURRENTLY USED ON THE FRONTEND TO GET YOUR OWN PROFILE
 // @route       /api/profiles
 // @desc        Get a profile
 router.get('/', async (req,res)=> {
     const id = req.query.id;
-    const findProfile = await Profile.findOne({user: id});
+    const findProfile = await Profile.findOne({user: id}).populate('user', ['firstname', 'lastname']);
     // console.log('Profile found', findProfile);
     res.send(findProfile)
 })

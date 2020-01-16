@@ -30,56 +30,59 @@ const findFollowingPost = async (req, res) => {};
 
 // @route       /api/posts/my-posts
 // @desc        Get posts that have been created by you
-router.get("/my-posts", async (req, res) => {
-  try {
-    const myPosts = await Post.find({ owningUser: req.user._id });
-    // console.log(myPosts);
-    res.send(myPosts);
-  } catch (err) {
-    console.log(err);
-    res.status(500).send("Server Error");
-  }
-});
+
+router.get('/my-posts', async(req, res) => {
+    try {
+        const myPosts = await Post.find({owningUser: req.user._id}).sort({ date: -1 });
+        res.send(myPosts);
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).send('Server Error');
+    }
+})
 
 // @route       /api/posts/create-post
-// @desc        Create a single post
-router.post("/create-post", upload, async (req, res) => {
-  try {
-    const { postTitle, postDescription } = req.body;
-    const { image } = req.files;
+// @desc        Delete a single post
+router.post('/create-post', upload, async (req, res) => {
+    try {
+        const { postDescription } = req.body;
+        const { image } = req.files
 
-    let imageUrl = null;
+        console.log(postDescription);
+        console.log(image);
 
-    if (image) {
-      const uniqueTimeValue = Date.now().toString();
-      const name =
-        image[0].originalname + image[0].size + req.user._id + uniqueTimeValue;
+        let imageUrl = null;
 
-      const fileParams = {
-        Bucket: process.env.BUCKET,
-        Body: image[0].buffer,
-        Key: name,
-        ACL: "public-read",
-        ContentType: image[0].mimetype
-      };
+        if(image){
+            const uniqueTimeValue = (Date.now()).toString();
+            const name = image[0].originalname + image[0].size + req.user._id + uniqueTimeValue;
 
-      const data = await s3credentials.upload(fileParams).promise();
-      imageUrl = data.Location;
-      console.log(imageUrl);
-    }
+            const fileParams = {
+                Bucket: process.env.BUCKET,
+                Body: image[0].buffer,
+                Key: name,
+                ACL: 'public-read',
+                ContentType: image[0].mimetype
+            }
 
-    const newPost = new Post({
-      owningUser: req.user._id,
-      title: postTitle,
-      content: postDescription,
-      image: imageUrl
-    });
-    await newPost.save();
-    res.send(newPost);
-  } catch (err) {
-    console.log(err.message);
-    res.status(500).send(err);
-  }
+            const data = await s3credentials.upload(fileParams).promise();
+            imageUrl = data.Location;
+            console.log(imageUrl);
+        }
+
+        const newPost = new Post({
+            owningUser: req.user._id,
+            content: postDescription,
+            image: imageUrl
+        });
+        await newPost.save();
+        res.send(newPost);
+
+    } catch (err) {
+        console.error('Error:', err.message);
+        res.status(500).send(err)
+    };
 });
 
 // @route       /api/posts/delete-post/:id
@@ -95,6 +98,31 @@ router.delete("/delete-post/:id", async (req, res) => {
 
   res.send("removed the post");
 });
+
+
+// @route    PUT api/posts/like/:id   // its a put request because technically we are updating the post
+// @desc     Like a post
+// @access   Private
+router.put('/like/:id', async (req, res) => {
+    try {
+      const post = await Post.findById(req.params.id);
+  
+      // Check if the post has already been liked - is there a better way to do this?
+      if (post.likes.filter(like => like.user.toString() === req.user.id).length > 0) {
+        return res.status(400).json({ msg: 'Post already liked' });
+      }
+  
+      post.likes.unshift({ user: req.user.id });
+  
+      await post.save();
+  
+      res.json(post.likes);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+    }
+  });
+
 
 // @route       /api/posts/viewing-users-posts/:id
 // @desc        Delete a single post
