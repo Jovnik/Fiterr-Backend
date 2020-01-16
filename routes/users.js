@@ -125,7 +125,6 @@ router.post("/professional-activate", async (req, res) => {
     let errors = [];
     let phoneNumberArr = [];
     phoneNumberArr = phoneNumber.split('')
-    console.log(phoneNumberArr);
     if (phoneNumber.length != 10) {
       errors.push({ msg: "Phone Number must be 10 lengths long" })
     }
@@ -138,7 +137,6 @@ router.post("/professional-activate", async (req, res) => {
     } else {
       user.phoneNumber = phoneNumber;
       user.isProfessional = true;
-      console.log(user);
       res.status(200).send("ALL GOOD")
     }
   } catch (err) {
