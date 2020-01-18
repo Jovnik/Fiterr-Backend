@@ -37,9 +37,18 @@ const UserSchema = mongoose.Schema({
         type: Boolean,
         default: false
     },
+    professional: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'professional'
+    },
     profile: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'profile'
+    },
+    phoneNumber: String,
+    pageOwned: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'page'
     }
     
 })
