@@ -43,29 +43,29 @@ router.post("/register", async (req, res) => {
 
 router.post('/login', [
   check('email', 'Please include a valid email').isEmail(),
-  check('password', 'Password is required').exists()   
-], async(req, res) => {
+  check('password', 'Password is required').exists()
+], async (req, res) => {
 
-    const errors = validationResult(req);
-    
-    if(!errors.isEmpty()){
-      console.log('These are the errors', errors.array());
-      return res.status(400).json({ errors: errors.array() })
-    }
+  const errors = validationResult(req);
 
-    passport.authenticate('local', (err, user, info) => {
-      if (err) { res.status(500).send(err) } // server error (eg. cant fetch data)
-      else if (info) { return res.send(info) }   // login error messages from the local strategy (email not registered or password invalid)
-      else {   
-        // console.log('at this point a user has been found in the local strategy');
-        req.login(user, (err) => {
-          if(err) { return res.status(500).send(err) } // is this a different error to the 500 above?
-        });    
-        // now have access to req.user after logging in
-        return res.status(200).json(req.user); 
-      }
-    })(req, res);
+  if (!errors.isEmpty()) {
+    console.log('These are the errors', errors.array());
+    return res.status(400).json({ errors: errors.array() })
   }
+
+  passport.authenticate('local', (err, user, info) => {
+    if (err) { res.status(500).send(err) } // server error (eg. cant fetch data)
+    else if (info) { return res.send(info) }   // login error messages from the local strategy (email not registered or password invalid)
+    else {
+      // console.log('at this point a user has been found in the local strategy');
+      req.login(user, (err) => {
+        if (err) { return res.status(500).send(err) } // is this a different error to the 500 above?
+      });
+      // now have access to req.user after logging in
+      return res.status(200).json(req.user);
+    }
+  })(req, res);
+}
 )
 
 // @route       /api/users/logout
@@ -146,6 +146,7 @@ router.post("/professional-activate", async (req, res) => {
     } else {
       user.phoneNumber = phoneNumber;
       user.isProfessional = true;
+      user.save()
       res.status(200).send("ALL GOOD")
     }
   } catch (err) {

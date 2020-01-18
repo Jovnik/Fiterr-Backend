@@ -45,6 +45,10 @@ const UserSchema = mongoose.Schema({
   profile: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "profile"
+  },
+  pageOwned: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "page"
   }
 });
 

@@ -23,66 +23,66 @@ const s3credentials = new AWS.S3({
 });
 
 /* findPost will be a function that finds all the posts created by the user */
-const findPost = async (req, res) => {};
+const findPost = async (req, res) => { };
 
 /* findFollowingPost will be a function that finds 50 posts that the user is following */
-const findFollowingPost = async (req, res) => {};
+const findFollowingPost = async (req, res) => { };
 
 // @route       /api/posts/my-posts
 // @desc        Get posts that have been created by you
 
-router.get('/my-posts', async(req, res) => {
-    try {
-        const myPosts = await Post.find({owningUser: req.user._id}).sort({ date: -1 });
-        res.send(myPosts);
+router.get('/my-posts', async (req, res) => {
+  try {
+    const myPosts = await Post.find({ owningUser: req.user._id }).sort({ date: -1 });
+    res.send(myPosts);
 
-    } catch (err) {
-        console.log(err);
-        res.status(500).send('Server Error');
-    }
+  } catch (err) {
+    console.log(err);
+    res.status(500).send('Server Error');
+  }
 })
 
 // @route       /api/posts/create-post
 // @desc        Delete a single post
 router.post('/create-post', upload, async (req, res) => {
-    try {
-        const { postDescription } = req.body;
-        const { image } = req.files
+  try {
+    const { postDescription } = req.body;
+    const { image } = req.files
 
-        console.log(postDescription);
-        console.log(image);
+    console.log(postDescription);
+    console.log(image);
 
-        let imageUrl = null;
+    let imageUrl = null;
 
-        if(image){
-            const uniqueTimeValue = (Date.now()).toString();
-            const name = image[0].originalname + image[0].size + req.user._id + uniqueTimeValue;
+    if (image) {
+      const uniqueTimeValue = (Date.now()).toString();
+      const name = image[0].originalname + image[0].size + req.user._id + uniqueTimeValue;
 
-            const fileParams = {
-                Bucket: process.env.BUCKET,
-                Body: image[0].buffer,
-                Key: name,
-                ACL: 'public-read',
-                ContentType: image[0].mimetype
-            }
+      const fileParams = {
+        Bucket: process.env.BUCKET,
+        Body: image[0].buffer,
+        Key: name,
+        ACL: 'public-read',
+        ContentType: image[0].mimetype
+      }
 
-            const data = await s3credentials.upload(fileParams).promise();
-            imageUrl = data.Location;
-            console.log(imageUrl);
-        }
+      const data = await s3credentials.upload(fileParams).promise();
+      imageUrl = data.Location;
+      console.log(imageUrl);
+    }
 
-        const newPost = new Post({
-            owningUser: req.user._id,
-            content: postDescription,
-            image: imageUrl
-        });
-        await newPost.save();
-        res.send(newPost);
+    const newPost = new Post({
+      owningUser: req.user._id,
+      content: postDescription,
+      image: imageUrl
+    });
+    await newPost.save();
+    res.send(newPost);
 
-    } catch (err) {
-        console.error('Error:', err.message);
-        res.status(500).send(err)
-    };
+  } catch (err) {
+    console.error('Error:', err.message);
+    res.status(500).send(err)
+  };
 });
 
 // @route       /api/posts/delete-post/:id
@@ -104,24 +104,24 @@ router.delete("/delete-post/:id", async (req, res) => {
 // @desc     Like a post
 // @access   Private
 router.put('/like/:id', async (req, res) => {
-    try {
-      const post = await Post.findById(req.params.id);
-  
-      // Check if the post has already been liked - is there a better way to do this?
-      if (post.likes.filter(like => like.user.toString() === req.user.id).length > 0) {
-        return res.status(400).json({ msg: 'Post already liked' });
-      }
-  
-      post.likes.unshift({ user: req.user.id });
-  
-      await post.save();
-  
-      res.json(post.likes);
-    } catch (err) {
-      console.error(err.message);
-      res.status(500).send('Server Error');
+  try {
+    const post = await Post.findById(req.params.id);
+
+    // Check if the post has already been liked - is there a better way to do this?
+    if (post.likes.filter(like => like.user.toString() === req.user.id).length > 0) {
+      return res.status(400).json({ msg: 'Post already liked' });
     }
-  });
+
+    post.likes.unshift({ user: req.user.id });
+
+    await post.save();
+
+    res.json(post.likes);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
 
 
 // @route       /api/posts/viewing-users-posts/:id

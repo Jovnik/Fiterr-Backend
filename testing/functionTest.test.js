@@ -1,9 +1,5 @@
-// const {
-//     createPost
-// } = require('../routes/userPosts')
-
 const request = require("supertest");
-const app = require("../app");
+const app = require("../app.js");
 const mongoose = require("mongoose");
 let cookie = null;
 
@@ -22,19 +18,26 @@ beforeEach(() => {
   );
 });
 
+// @desc: logout function for future tests.
+const logout = async () => {
+  response = await request(app)
+    .post("/api/users/logout")
+};
+
 afterEach(() => {
+  logout()
   mongoose.connection.close();
 });
 
-// @desc: Registration test: Testing that a user can login through the backend API.
+// // @desc: Registration test: Testing that a user can login through the backend API.
 // test("registration test", async () => {
 //   await request(app)
 //     .post("/api/users/register")
 //     .send({
-//       firstname: "william",
-//       lastname: "johnson",
-//       email: "williamjohnson@gmail.com",
-//       username: "willyJohnson",
+//       firstname: "m",
+//       lastname: "d",
+//       email: "md@email.com",
+//       username: "md",
 //       password: "asdfgh",
 //       gender: "Male",
 //       dob: new Date()
@@ -54,7 +57,20 @@ afterEach(() => {
 //     });
 // });
 
+// // @desc: login function for future tests.
+// // @NOTE: THIS USER LOGIN IS FOR A [ NON-PROFESSIONAL USER ]
+// const login = async () => {
+//   const response = await request(app)
+//     .post("/api/users/login")
+//     .send({
+//       email: "williamjohnson@gmail.com",
+//       password: "asdfgh"
+//     });
+//   return response.headers["set-cookie"];
+// };
+
 // @desc: login function for future tests.
+// @NOTE: THIS USER LOGIN IS FOR A [ PROFESSIONAL USER ]
 const login = async () => {
   const response = await request(app)
     .post("/api/users/login")
@@ -97,15 +113,30 @@ const login = async () => {
 //     })
 // });
 
-// @route /api/users/professional-activate
-// @desc: Testing that when route is hit the users isProfessional is switched to True
-test("switches user to professional once phone number is entered [SHOULD PASS]", async () => {
+// // @route /api/users/professional-activate
+// // @desc: Testing that when route is hit the users isProfessional is switched to True
+// test("switches user to professional once phone number is entered [SHOULD PASS]", async () => {
+//   let cookie = await login();
+//   response = await request(app)
+//     .post("/api/users/professional-activate")
+//     .set("cookie", cookie)
+//     .send({
+//       phoneNumber: "0412345178"
+//     })
+//     .expect(200);
+// });
+
+// @route       /api/pages/register
+// @desc        when hit the router will create a new page for a Professional
+// @NOTE:       TEST CLAIMS TO FAIL, HOWEVER, WHEN MONGO IS CHECKED THERE IS A NEW PAGE CREATED!
+test("Creates a new package for the page", async () => {
   let cookie = await login();
   response = await request(app)
-    .post("/api/users/professional-activate")
+    .post("/api/pages/register")
     .set("cookie", cookie)
     .send({
-      phoneNumber: "0412345178"
+      pageTitle: "MD's FITNESS",
+      pageAbout: "ALL THINGS FITNESS BABY SKEEEET"
     })
     .expect(200);
-});
+})
