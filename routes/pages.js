@@ -63,13 +63,13 @@ router.post('/create', upload, async(req,res)=> {
             currentUser.pageOwned = page._id
             await currentUser.save()
             res.status(200).send('page created')
+        }else {
+            res.status(400).send("Not a professional user")
         }
         
     }catch(err){
         res.status(400).send(err)
     }
-
-    
 })
 
 module.exports = router;

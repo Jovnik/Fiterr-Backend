@@ -116,7 +116,7 @@ router.post('/get-viewing-user-profile', async(req, res) => {
 
   res.json({ user, profile });
 });
-
+//required below for parsing FormData
 const fields = [
   {name: 'phoneNumber'}
 ]
@@ -167,3 +167,4 @@ router.post("/professional-activate", upload, async (req, res) => {
 });
 
 module.exports = router;
+

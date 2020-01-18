@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const UserSchema = mongoose.Schema({
     firstname: {
@@ -45,7 +45,11 @@ const UserSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'profile'
     },
-    phoneNumber: String,
+    phoneNumber: {
+        type: String,
+        default: null,
+        required: false
+    },
     pageOwned: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'page'
@@ -53,4 +57,4 @@ const UserSchema = mongoose.Schema({
     
 })
 
-module.exports = mongoose.model('user', UserSchema);
+module.exports = mongoose.model("user", UserSchema);
