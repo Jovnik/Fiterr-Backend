@@ -6,6 +6,7 @@ const PageSchema = mongoose.Schema({
         ref: 'user'
     },
     pageTitle: String,
+    pageAbout: String,
     likes: [
         {
             type: mongoose.Schema.Types.ObjectId,
