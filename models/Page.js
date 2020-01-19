@@ -33,7 +33,8 @@ const PageSchema = mongoose.Schema({
     posts: [{
         type: mongoose.Schema.Types.ObjectID,
         ref: 'post'
-    }]
+    }],
+    displayImage: String
 
 })
 

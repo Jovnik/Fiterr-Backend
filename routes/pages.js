@@ -4,7 +4,9 @@ const Page = require('../models/Page')
 const multer = require('multer');
 const storage = multer.memoryStorage();
 const User = require('../models/User')
-
+const AWS = require('aws-sdk');
+require('dotenv').config()
+const storage = multer.memoryStorage()
 
 router.get('/get-page/:handle', async(req,res)=> {
     try{
@@ -42,23 +44,52 @@ const fields = [
     {name: 'pageOwner'},
     {name: 'pageHandle'},
     {name: 'pageTitle'},
-    {name: 'pageAbout'}
+    {name: 'pageAbout'},
+    {name: 'image'}
   ]
 const upload = multer({storage: storage}).fields(fields)
+let s3credentials = new AWS.S3({
+    accessKeyId: process.env.ACCESSKEYID,
+    secretAccessKey: process.env.SECRETACCESSKEY
+});
 
 router.post('/create', upload, async(req,res)=> {
     try{
+        let imageUrl = null;
+        if(image){
+        
+            // if there is an image then we generate a unique name 
+            // console.log('here', image);
+            const uniqueValue = req.user.id;
+            const uniqueTimeValue = (Date.now()).toString();
+            const name = image[0].originalname + image[0].size + uniqueValue + uniqueTimeValue;
+
+            let fileParams = {
+                Bucket: process.env.BUCKET,
+                Body: image[0].buffer,
+                Key: name,
+                ACL: 'public-read',
+                ContentType: image[0].mimetype
+            }
+
+            const data = await s3credentials.upload(fileParams).promise();  //because this is in a trycatch, error thrown if detected with the upload
+
+            imageUrl = data.Location;
+            imagesArr = [imageUrl];
+
+        }
         console.log(req.body)
         const professionalUser = req.user.isProfessional;
         const currentUser = await User.findOne({ _id: req.user.id })
         if(professionalUser){
             const {pageOwner, pageHandle, pageTitle, pageAbout} = req.body
-    
+            const {image} = req.files
             let page = await Page.findOne({ pageHandle });
             if(page){
                 return res.status(400).send('This Handle is Already Taken')
             }
             page = new Page(req.body)
+            page.displayImage = imageUrl
             await page.save()
             currentUser.pageOwned = page._id
             await currentUser.save()
