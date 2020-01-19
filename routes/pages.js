@@ -23,11 +23,11 @@ router.get('/get-page/:handle', async(req,res)=> {
 })
 
 router.get('/find-role/:handle', async(req,res) => {
-    const handle = req.params.handle
+    const { handle } = req.params
 
     const page = await Page.findOne({pageHandle: handle})
     
-    if(req.user._id == page.pageOwner){
+    if(req.user.id == page.pageOwner){
         res.send('Owner')
     }else if(page.trainers.includes(req.user._id)){
         res.send('Trainer')
@@ -69,6 +69,19 @@ router.post('/create', upload, async(req,res)=> {
         
     }catch(err){
         res.status(400).send(err)
+    }
+})
+
+router.put('/about', upload, async(req,res) => {
+    try{
+        const {pageAbout, pageHandle} = req.body
+        const page = await Page.findOne({pageHandle: pageHandle})
+        page.pageAbout = pageAbout
+        await page.save()
+        res.status(200).send(page)
+    }catch(err){
+        res.status(400).send(err)
+        console.log(err)
     }
 })
 
