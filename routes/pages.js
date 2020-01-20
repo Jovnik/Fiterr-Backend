@@ -18,18 +18,36 @@ router.post('/register', async (req, res) => {
         try {
             const { pageTitle, pageAbout } = req.body
             const { pageOwner } = req.user.id
+            let errors = []
 
-            const newPage = new Page({
-                pageOwner: pageOwner,
-                pageTitle: pageTitle,
-                pageAbout: pageAbout
-            });
-            await newPage.save()
-                .then(doc => {
-                    currentUser.pageOwned = doc._id
-                    currentUser.save()
-                })
-            res.status(200).send(newPage);
+            if (currentUser.pageOwned != null) {
+                errors.push({ msg: "User already has a professional page" })
+                console.log(errors);
+                res.status(400).send(errors)
+            } else {
+                Page.findOne({ pageTitle: pageTitle })
+                    .then(async (page) => {
+                        if (page) {
+                            errors.push({ msg: "Name is already in use, please try again" })
+                            console.log(errors);
+                            res.status(400).send(errors)
+                        } else {
+                            const newPage = new Page({
+                                pageOwner: pageOwner,
+                                pageTitle: pageTitle.replace(/\s/g, ''),
+                                pageAbout: pageAbout
+                            });
+                            await newPage.save()
+                                .then(doc => {
+                                    currentUser.pageOwned = doc._id
+                                    currentUser.save()
+                                })
+                            res.status(200).send(newPage);
+                        }
+                    })
+            }
+
+
 
         } catch (err) {
             console.log('Error', err.message);

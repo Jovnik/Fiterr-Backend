@@ -121,7 +121,7 @@ router.post("/get-viewing-user-profile", async (req, res) => {
 
 router.post("/professional-activate", async (req, res) => {
   const { phoneNumber } = req.body;
-  const { userID } = req.user.id;
+  // const { userID } = req.user.id;
 
   // update user by adding phone number and then swapping boolean
   // add professional ID to User Model
