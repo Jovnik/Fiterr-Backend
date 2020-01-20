@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Page = require('../models/Page')
+const Package = require('../models/Packages')
 const multer = require('multer');
 const storage = multer.memoryStorage();
 const User = require('../models/User')
@@ -8,12 +9,13 @@ const AWS = require('aws-sdk');
 require('dotenv').config()
 const mongoose = require('mongoose')
 
-router.get('/get-page/:handle', async (req, res) => {
-    try {
+
+router.get('/get-page/:handle', async(req,res)=> {
+    try{
         console.log(req.user)
         const handle = req.params.handle
         console.log(handle)
-        const page = await Page.findOne({ pageHandle: handle })
+        const page = await Page.findOne({pageHandle: handle}).populate('packages').populate('posts')
         console.log(page)
         res.status(200).send(page)
     } catch (err) {
@@ -40,14 +42,22 @@ router.get('/find-role/:handle', async (req, res) => {
     }
 })
 
-const fields = [
-    { name: 'pageOwner' },
-    { name: 'pageHandle' },
-    { name: 'pageTitle' },
-    { name: 'pageAbout' },
-    { name: 'image' }
-]
+
 const upload = multer({ storage: storage }).fields(fields)
+
+    {name: 'pageOwner'},
+    {name: 'pageHandle'},
+    {name: 'pageTitle'},
+    {name: 'pageAbout'},
+    {name: 'image'},
+    {name: 'title'},
+    {name: 'pageID'},
+    {name: 'description'},
+    {name: 'numberOfSessions'},
+    {name: 'price'}
+  ]
+
+
 let s3credentials = new AWS.S3({
     accessKeyId: process.env.ACCESSKEYID,
     secretAccessKey: process.env.SECRETACCESSKEY
@@ -139,5 +149,26 @@ router.put('/about', upload, async (req, res) => {
         console.log(err)
     }
 })
+router.post('/package-create', upload, async(req,res)=> {
+    try{
+        const {pageID, title, description, numberOfSessions, price} = req.body
+        console.log('eherreef')
+        console.log('req.bod', req.body)
+        console.log('pageID', pageID)
+        const package = new Package(req.body)
+        console.log('package', package)
+        await package.save()
+        let page = await Page.findOneAndUpdate({_id: pageID}, {$push: {packages: package}})
+        await page.save()
+        page = await Page.findOne({_id: pageID}).populate('packages')
+        console.log('page', page)
 
+        // let updatedPage = await Page.findOne({pageID: pageID}).populate('packages')
+        // console.log('updated', updatedPage)
+        res.send(page)
+    }catch(err){
+        res.status(400).send(err)
+        console.log(err)
+    }
+})
 module.exports = router;
