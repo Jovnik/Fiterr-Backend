@@ -7,6 +7,7 @@ const Page = require('../models/Page')
 const Service = require('../models/Service')
 const passport = require('passport')
 const multer = require('multer');
+const storage = multer.memoryStorage();
 const AWS = require('aws-sdk');
 const stripe = require('stripe')(process.env.SECRETSTRIPE);
 require('dotenv').config()
@@ -51,13 +52,20 @@ router.get('/:pageId', async (req, res) => {
 
 // @route       /api/professional/update/:title
 // @desc        will update the price of a package
-router.put("/update/:title", async (req, res) => {
+const fields = [
+    {name: 'price'},
+    {name: 'id'}
+]
+const upload = multer({storage: storage}).fields(fields)
+router.put("/package-price-update", upload, async (req, res) => {
     try {
-        const newPrice = req.body.price;
-        const updatedPackage = await Packages.findOneAndUpdate({ title: req.params.title }, {
-            price: newPrice
-        })
-        res.status(200).send(updatedPackage)
+        const {price, id} = req.body
+        console.log(price, id)
+        const package = await Packages.findOne({ _id: id })
+        package.price = price 
+        await package.save()
+        console.log('updatedpackage', package)
+        res.status(200).send(package    )
     } catch (err) {
         res.status(500).send(err.message)
     }
@@ -65,10 +73,10 @@ router.put("/update/:title", async (req, res) => {
 
 // @route       /api/professional/:id/:id   (:id = pageId)/(:id = packageId)
 // @desc        will display one of the packages from a page
-router.get('/:pageId/:packageId', async (req, res) => {
+router.get('/:pageHandle/:packageId', async (req, res) => {
     try {
-        const selectedPage = await Page.findOne({ pageTitle: req.params.pageId })
-        const selectedPackage = await Packages.findOne({ title: req.params.packageId })
+        const selectedPage = await Page.findOne({ pageHandle: req.params.pageHandle })
+        const selectedPackage = await Packages.findOne({ _id: req.params.packageId })
         console.log(selectedPage);
         console.log(selectedPackage);
         res.status(200).send(selectedPackage)
