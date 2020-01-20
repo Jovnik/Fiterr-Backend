@@ -44,7 +44,7 @@ router.get('/find-role/:handle', async (req, res) => {
 
 
 const upload = multer({ storage: storage }).fields(fields)
-
+const fields=[
     {name: 'pageOwner'},
     {name: 'pageHandle'},
     {name: 'pageTitle'},
