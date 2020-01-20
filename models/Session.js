@@ -5,6 +5,7 @@ const SessionSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'service'
     },
+    trainerApproval: {type: Boolean, default: false},
     time: String,
     date: Date,
     location: String,
