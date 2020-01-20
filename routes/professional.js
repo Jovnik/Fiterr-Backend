@@ -4,6 +4,7 @@ const User = require('../models/User');
 const Profile = require('../models/Profile')
 const Packages = require('../models/Packages')
 const Page = require('../models/Page')
+const Service = require('../models/Service')
 const passport = require('passport')
 const multer = require('multer');
 const AWS = require('aws-sdk');
@@ -79,23 +80,38 @@ router.get('/:pageId/:packageId', async (req, res) => {
 
 // @route       /api/professional/:pageId/:packageId
 // @desc        will purchase a package for an enthusiast 
+
 router.post('/:pageId/:packageId', async (req, res) => {
+    console.log(req.user);
     try {
+        const selectedPage = await Page.findOne({ pageHandle: req.params.pageId })
         const packagePurchased = await Packages.findOne({ title: req.params.packageId })
         const amount = packagePurchased.price
+        console.log(packagePurchased);
+        console.log(selectedPage);
         const customer = await stripe.customers.create({
             email: req.body.stripeEmail,
             source: req.body.stripeToken
         })
         stripe.charges.create({
             amount,
-            description: `${packagePurchased.description}`,
+            description: packagePurchased.description,
             currency: 'aud',
             customer: customer.id
         })
-        res.status(200).end()
+        const newService = new Service({
+            enthusiastID: req.user.id,
+            professionalID: selectedPage.pageOwner,
+            pageID: packagePurchased.pageID,
+            packageID: packagePurchased._id,
+            DatePurchased: Date.now(),
+            quantityRemaining: packagePurchased.numberOfSessions,
+            Sessions: null,
+        })
+        await newService.save()
+        res.status(200).send(newService)
     } catch (err) {
-        console.log('Error', err.message);
+        console.log('Error', err);
         res.status(500).send(err)
     }
 })

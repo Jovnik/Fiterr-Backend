@@ -3,7 +3,6 @@ const cors = require('cors')
 const session = require('express-session')
 const MongoStore = require('connect-mongo')(session)
 const mongoose = require('mongoose')
-const stripe = require('stripe')(process.env.SECRETSTRIPE)
 require('dotenv').config();
 
 const morgan = require('morgan');
