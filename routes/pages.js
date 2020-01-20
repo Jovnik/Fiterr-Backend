@@ -149,26 +149,26 @@ router.put('/about', upload, async (req, res) => {
         console.log(err)
     }
 })
-// router.post('/package-create', upload, async(req,res)=> {
-//     try{
-//         const {pageID, title, description, numberOfSessions, price} = req.body
-//         console.log('eherreef')
-//         console.log('req.bod', req.body)
-//         console.log('pageID', pageID)
-//         const package = new Package(req.body)
-//         console.log('package', package)
-//         await package.save()
-//         let page = await Page.findOneAndUpdate({_id: pageID}, {$push: {packages: package}})
-//         await page.save()
-//         page = await Page.findOne({_id: pageID}).populate('packages')
-//         console.log('page', page)
+router.post('/package-create', upload, async (req, res) => {
+    try {
+        const { pageID, title, description, numberOfSessions, price } = req.body
+        console.log('eherreef')
+        console.log('req.bod', req.body)
+        console.log('pageID', pageID)
+        const package = new Package(req.body)
+        console.log('package', package)
+        await package.save()
+        let page = await Page.findOneAndUpdate({ _id: pageID }, { $push: { packages: package } })
+        await page.save()
+        page = await Page.findOne({ _id: pageID }).populate('packages')
+        console.log('page', page)
 
-//         // let updatedPage = await Page.findOne({pageID: pageID}).populate('packages')
-//         // console.log('updated', updatedPage)
-//         res.send(page)
-//     }catch(err){
-//         res.status(400).send(err)
-//         console.log(err)
-//     }
-// })
+        // let updatedPage = await Page.findOne({pageID: pageID}).populate('packages')
+        // console.log('updated', updatedPage)
+        res.send(page)
+    } catch (err) {
+        res.status(400).send(err)
+        console.log(err)
+    }
+})
 module.exports = router;

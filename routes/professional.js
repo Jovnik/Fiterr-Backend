@@ -51,26 +51,26 @@ router.get('/:pageId', async (req, res) => {
 })
 
 
-// // @route       /api/professional/update/:title
-// // @desc        will update the price of a package
-// const fields = [
-//     { name: 'price' },
-//     { name: 'id' }
-// ]
-// const upload = multer({ storage: storage }).fields(fields)
-// router.put("/package-price-update", upload, async (req, res) => {
-//     try {
-//         const { price, id } = req.body
-//         console.log(price, id)
-//         const package = await Packages.findOne({ _id: id })
-//         package.price = price
-//         await package.save()
-//         console.log('updatedpackage', package)
-//         res.status(200).send(package)
-//     } catch (err) {
-//         res.status(500).send(err.message)
-//     }
-// })
+// @route       /api/professional/update/:title
+// @desc        will update the price of a package
+const fields = [
+    { name: 'price' },
+    { name: 'id' }
+]
+const upload = multer({ storage: storage }).fields(fields)
+router.put("/package-price-update", upload, async (req, res) => {
+    try {
+        const { price, id } = req.body
+        console.log(price, id)
+        const package = await Packages.findOne({ _id: id })
+        package.price = price
+        await package.save()
+        console.log('updatedpackage', package)
+        res.status(200).send(package)
+    } catch (err) {
+        res.status(500).send(err.message)
+    }
+})
 
 // @route       /api/professional/:id/:id   (:id = pageId)/(:id = packageId)
 // @desc        will display one of the packages from a page
