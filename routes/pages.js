@@ -42,8 +42,6 @@ router.get('/find-role/:handle', async (req, res) => {
     }
 })
 
-
-const upload = multer({ storage: storage }).fields(fields)
 const fields=[
     {name: 'pageOwner'},
     {name: 'pageHandle'},
@@ -55,7 +53,9 @@ const fields=[
     {name: 'description'},
     {name: 'numberOfSessions'},
     {name: 'price'}
-  ]
+]
+const upload = multer({ storage: storage }).fields(fields)
+
 
 
 let s3credentials = new AWS.S3({
