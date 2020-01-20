@@ -6,6 +6,9 @@ const storage = multer.memoryStorage();
 const User = require('../models/User')
 const AWS = require('aws-sdk');
 require('dotenv').config()
+const mongoose = require('mongoose')
+
+
 const storage = multer.memoryStorage()
 
 router.get('/get-page/:handle', async(req,res)=> {
@@ -76,6 +79,7 @@ router.post('/create', upload, async(req,res)=> {
 
             imageUrl = data.Location;
             imagesArr = [imageUrl];
+
 
         }
         console.log(req.body)
