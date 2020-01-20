@@ -9,9 +9,6 @@ const AWS = require('aws-sdk');
 require('dotenv').config()
 const mongoose = require('mongoose')
 
-
-
-
 router.get('/get-page/:handle', async(req,res)=> {
     try{
         console.log(req.user)
