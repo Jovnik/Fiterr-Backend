@@ -6,6 +6,7 @@ const Packages = require('../models/Packages')
 const Page = require('../models/Page')
 const Service = require('../models/Service')
 const passport = require('passport')
+const Session = require('../models/Session')
 const multer = require('multer');
 const storage = multer.memoryStorage();
 const AWS = require('aws-sdk');
@@ -50,26 +51,26 @@ router.get('/:pageId', async (req, res) => {
 })
 
 
-// @route       /api/professional/update/:title
-// @desc        will update the price of a package
-const fields = [
-    {name: 'price'},
-    {name: 'id'}
-]
-const upload = multer({storage: storage}).fields(fields)
-router.put("/package-price-update", upload, async (req, res) => {
-    try {
-        const {price, id} = req.body
-        console.log(price, id)
-        const package = await Packages.findOne({ _id: id })
-        package.price = price 
-        await package.save()
-        console.log('updatedpackage', package)
-        res.status(200).send(package    )
-    } catch (err) {
-        res.status(500).send(err.message)
-    }
-})
+// // @route       /api/professional/update/:title
+// // @desc        will update the price of a package
+// const fields = [
+//     { name: 'price' },
+//     { name: 'id' }
+// ]
+// const upload = multer({ storage: storage }).fields(fields)
+// router.put("/package-price-update", upload, async (req, res) => {
+//     try {
+//         const { price, id } = req.body
+//         console.log(price, id)
+//         const package = await Packages.findOne({ _id: id })
+//         package.price = price
+//         await package.save()
+//         console.log('updatedpackage', package)
+//         res.status(200).send(package)
+//     } catch (err) {
+//         res.status(500).send(err.message)
+//     }
+// })
 
 // @route       /api/professional/:id/:id   (:id = pageId)/(:id = packageId)
 // @desc        will display one of the packages from a page
@@ -126,19 +127,33 @@ router.post('/:pageHandle/:packageId', async (req, res) => {
 })
 
 
-
-/* --------- CANT COMPLETE BELOW UNTIL PACKAGES ARE COMPLETE ---------*/
-// @route       /api/professional/service-register
-// @desc        when hit router will create a new service for a group of packages
-router.post('/service-register', async (req, res) => {
+const serviceFields = [
+    { name: "serviceID" },
+    { name: "time" },
+    { name: "date" },
+    { name: "location" }
+]
+const serviceUpload = multer({ storage: storage }).fields(serviceFields)
+router.post('/session-create', serviceUpload, async (req, res) => {
     try {
-        console.log(req.params);
-        res.status(200).send("all good brudda")
+        console.log(req.body);
+        const { time, date, location, serviceID } = req.body;
+        const newSession = new Session({
+            serviceID: serviceID,
+            time: time,
+            date: date,
+            location: location
+        })
+        const currentService = await Service.findOne({ _id: req.body.serviceID })
+        currentService.Sessions = newSession
+        await currentService.save()
+        console.log(currentService.Sessions);
+        await newSession.save()
+        res.status(200).send(newSession);
     } catch (err) {
-        console.log('Error', err.message);
+        console.log('error', err);
         res.status(500).send(err)
     }
 })
-
 
 module.exports = router;
