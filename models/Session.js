@@ -5,11 +5,14 @@ const SessionSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'service'
     },
-    trainerApproval: {type: Boolean, default: false},
+    trainerApproval: { type: Boolean, default: false },
     time: String,
     date: Date,
     location: String,
-    complete: Boolean
+    complete: {
+        type: Boolean,
+        default: false
+    }
 })
 
 module.exports = mongoose.model('session', SessionSchema);
