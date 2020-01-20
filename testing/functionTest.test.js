@@ -127,19 +127,27 @@ const login = async () => {
 //     .expect(200);
 // });
 
-// @route       /api/pages/register
-// @desc        when hit the router will create a new page for a Professional
-// @NOTE:       TEST CLAIMS TO FAIL, HOWEVER, WHEN MONGO IS CHECKED THERE IS A NEW PAGE CREATED!
+// // @route       /api/pages/register
+// // @desc        when hit the router will create a new page for a Professional
+// // @NOTE:       TEST CLAIMS TO FAIL, HOWEVER, WHEN MONGO IS CHECKED THERE IS A NEW PAGE CREATED!
 // test("Creates a new page for the User", async () => {
 //   let cookie = await login();
 //   response = await request(app)
-//     .post("/api/pages/register")
+//     .post("/api/pages/create")
 //     .set("cookie", cookie)
-//     .send({
-//       pageTitle: "MD FITNESS",
-//       pageAbout: "ALL THINGS FITNESS BABY SKEEEET"
-//     })
+//     .field("pageHandle", "MD FITNESS")
+//     .field("pageTitle", "MD Fitness")
+//     .field("pageAbout", "All things fitness!")
+//     .attach("image", null)
 //     .expect(200);
+// })
+
+// test("delete a page for the user", async () => {
+//   let cookie = await login();
+//   response = await request(app)
+//     .delete("/api/pages/delete")
+//     .set("cookie", cookie)
+//     .expect(200)
 // })
 
 // @route       /api/professional/package-register
@@ -218,7 +226,7 @@ test("purchase a package using stripe", async () => {
   let cookie = await login();
   response = await request(app)
     .post('/api/professional/MDFITNESS/Cardio')
-    .set("coookie", cookie)
+    .set("cookie", cookie)
     .send({
       stripeEmail: "customer1@email.com",
       stripeToken: token.id

@@ -18,31 +18,33 @@ router.get('/get-page/:handle', async(req,res)=> {
         const page = await Page.findOne({pageHandle: handle}).populate('packages').populate('posts')
         console.log(page)
         res.status(200).send(page)
-    }catch(err){
+    } catch (err) {
         console.log(err)
         res.status(400).send(err)
     }
-    
+
 
 })
 
-router.get('/find-role/:handle', async(req,res) => {
+router.get('/find-role/:handle', async (req, res) => {
     const { handle } = req.params
 
-    const page = await Page.findOne({pageHandle: handle})
-    
-    if(req.user.id == page.pageOwner){
+    const page = await Page.findOne({ pageHandle: handle })
+
+    if (req.user.id == page.pageOwner) {
         res.send('Owner')
-    }else if(page.trainers.includes(req.user._id)){
+    } else if (page.trainers.includes(req.user._id)) {
         res.send('Trainer')
-    }else if(page.contentCreators.includes(req.user._id)){
+    } else if (page.contentCreators.includes(req.user._id)) {
         res.send('Content-Creator')
-    }else{
+    } else {
         res.send('Visitor')
     }
 })
 
-const fields = [
+
+const upload = multer({ storage: storage }).fields(fields)
+
     {name: 'pageOwner'},
     {name: 'pageHandle'},
     {name: 'pageTitle'},
@@ -54,17 +56,19 @@ const fields = [
     {name: 'numberOfSessions'},
     {name: 'price'}
   ]
-const upload = multer({storage: storage}).fields(fields)
+
+
 let s3credentials = new AWS.S3({
     accessKeyId: process.env.ACCESSKEYID,
     secretAccessKey: process.env.SECRETACCESSKEY
 });
 
-router.post('/create', upload, async(req,res)=> {
-    try{
+router.post('/create', upload, async (req, res) => {
+    try {
         let imageUrl = null;
-        if(image){
-        
+        let image = null;
+        if (image != null) {
+
             // if there is an image then we generate a unique name 
             // console.log('here', image);
             const uniqueValue = req.user.id;
@@ -87,38 +91,60 @@ router.post('/create', upload, async(req,res)=> {
 
         }
         console.log(req.body)
+        const pageHandle = req.body.pageHandle
+        const newPageHandle = pageHandle.replace(/\s/g, '');
         const professionalUser = req.user.isProfessional;
         const currentUser = await User.findOne({ _id: req.user.id })
-        if(professionalUser){
-            const {pageOwner, pageHandle, pageTitle, pageAbout} = req.body
-            const {image} = req.files
-            let page = await Page.findOne({ pageHandle });
-            if(page){
+        if (professionalUser) {
+            const { pageOwner, pageTitle, pageAbout } = req.body
+            const { image } = req.files
+            let page = await Page.findOne({ newPageHandle });
+            if (page) {
                 return res.status(400).send('This Handle is Already Taken')
             }
             page = new Page(req.body)
+            page.pageHandle = newPageHandle
             page.displayImage = imageUrl
+            page.pageOwner = req.user.id
             await page.save()
             currentUser.pageOwned = page._id
             await currentUser.save()
             res.status(200).send('page created')
-        }else {
+        } else {
             res.status(400).send("Not a professional user")
         }
-        
-    }catch(err){
+
+    } catch (err) {
+        console.log(err);
         res.status(400).send(err)
     }
 })
 
-router.put('/about', upload, async(req,res) => {
-    try{
-        const {pageAbout, pageHandle} = req.body
-        const page = await Page.findOne({pageHandle: pageHandle})
+router.delete('/delete', async (req, res) => {
+    let currentUser = req.user.pageOwned
+    console.log(req.user.pageOwned);
+    console.log(currentUser);
+    try {
+        await Page.findOneAndDelete({ _id: req.user.pageOwned })
+        const updateUser = await User.findOneAndUpdate({ _id: req.user.id }, {
+            pageOwned: null
+        })
+        updateUser.save()
+        res.status(200).end()
+    } catch (err) {
+        console.log(err.message);
+        res.status(400).send(err)
+    }
+})
+
+router.put('/about', upload, async (req, res) => {
+    try {
+        const { pageAbout, pageHandle } = req.body
+        const page = await Page.findOne({ pageHandle: pageHandle })
         page.pageAbout = pageAbout
         await page.save()
         res.status(200).send(page)
-    }catch(err){
+    } catch (err) {
         res.status(400).send(err)
         console.log(err)
     }
