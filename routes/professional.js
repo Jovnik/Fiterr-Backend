@@ -89,24 +89,24 @@ router.get('/:pageHandle/:packageId', async (req, res) => {
 // @route       /api/professional/:pageId/:packageId
 // @desc        will purchase a package for an enthusiast 
 
-router.post('/:pageId/:packageId', async (req, res) => {
+router.post('/:pageHandle/:packageId', async (req, res) => {
     console.log(req.user);
     try {
-        const selectedPage = await Page.findOne({ pageHandle: req.params.pageId })
-        const packagePurchased = await Packages.findOne({ title: req.params.packageId })
+        const selectedPage = await Page.findOne({ pageHandle: req.params.pageHandle })
+        const packagePurchased = await Packages.findOne({ _id: req.params.packageId })
         const amount = packagePurchased.price
-        console.log(packagePurchased);
-        console.log(selectedPage);
-        const customer = await stripe.customers.create({
-            email: req.body.stripeEmail,
-            source: req.body.stripeToken
-        })
-        stripe.charges.create({
-            amount,
-            description: packagePurchased.description,
-            currency: 'aud',
-            customer: customer.id
-        })
+        console.log('package purchased', packagePurchased);
+        console.log('selected page', selectedPage);
+        // const customer = await stripe.customers.create({
+        //     email: req.body.stripeEmail,
+        //     source: req.body.stripeToken
+        // })
+        // stripe.charges.create({
+        //     amount,
+        //     description: packagePurchased.description,
+        //     currency: 'aud',
+        //     customer: customer.id
+        // })
         const newService = new Service({
             enthusiastID: req.user.id,
             professionalID: selectedPage.pageOwner,
@@ -116,6 +116,7 @@ router.post('/:pageId/:packageId', async (req, res) => {
             quantityRemaining: packagePurchased.numberOfSessions,
             Sessions: null,
         })
+        console.log('service created', newService)
         await newService.save()
         res.status(200).send(newService)
     } catch (err) {
