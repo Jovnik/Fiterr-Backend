@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "test": "jest --watchAll",
-    "start": "nodemon server.js"
+    "start": "nodemon server.js",
+    "format": "prettier --write \"**/*.+(js)\""
   },
   "keywords": [],
   "author": "",
@@ -32,6 +33,7 @@
     "@types/jest": "^24.0.23",
     "jest": "^24.9.0",
     "nodemon": "^2.0.1",
+    "prettier": "^1.19.1",
     "supertest": "^4.0.2"
   }
 }

@@ -83,23 +83,17 @@ router.post('/:pageId/:packageId', async (req, res) => {
     try {
         const packagePurchased = await Packages.findOne({ title: req.params.packageId })
         const amount = packagePurchased.price
-        stripe.customers.create({
+        const customer = await stripe.customers.create({
             email: req.body.stripeEmail,
             source: req.body.stripeToken
         })
-            .then(customer => {
-                console.log(customer);
-                stripe.charges.create({
-                    amount,
-                    description: `${packagePurchased.description}`,
-                    currency: 'aud',
-                    customer: customer.id
-                })
-                res.status(200).end()
-            })
-            .catch((err) => {
-                console.log(err)
-            })
+        stripe.charges.create({
+            amount,
+            description: `${packagePurchased.description}`,
+            currency: 'aud',
+            customer: customer.id
+        })
+        res.status(200).end()
     } catch (err) {
         console.log('Error', err.message);
         res.status(500).send(err)
