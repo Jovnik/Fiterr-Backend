@@ -1,60 +1,122 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
-const Profile = require('../models/Profile')
 const Page = require('../models/Page')
-const passport = require('passport')
 const multer = require('multer');
+const storage = multer.memoryStorage();
+const User = require('../models/User')
 const AWS = require('aws-sdk');
 require('dotenv').config()
 const mongoose = require('mongoose')
 
-// @route       /api/pages/register
-// @desc        when hit the router will create a new page for the professional
-router.post('/register', async (req, res) => {
-    const professionalUser = req.user.isProfessional;
-    const currentUser = await User.findOne({ _id: req.user.id })
-    if (professionalUser == true) {
-        try {
-            const { pageTitle, pageAbout } = req.body
-            const { pageOwner } = req.user.id
-            let errors = []
 
-            if (currentUser.pageOwned != null) {
-                errors.push({ msg: "User already has a professional page" })
-                console.log(errors);
-                res.status(400).send(errors)
-            } else {
-                Page.findOne({ pageTitle: pageTitle })
-                    .then(async (page) => {
-                        if (page) {
-                            errors.push({ msg: "Name is already in use, please try again" })
-                            console.log(errors);
-                            res.status(400).send(errors)
-                        } else {
-                            const newPage = new Page({
-                                pageOwner: pageOwner,
-                                pageTitle: pageTitle.replace(/\s/g, ''),
-                                pageAbout: pageAbout
-                            });
-                            await newPage.save()
-                                .then(doc => {
-                                    currentUser.pageOwned = doc._id
-                                    currentUser.save()
-                                })
-                            res.status(200).send(newPage);
-                        }
-                    })
+const storage = multer.memoryStorage()
+
+router.get('/get-page/:handle', async(req,res)=> {
+    try{
+        console.log(req.user)
+        const handle = req.params.handle
+        console.log(handle)
+        const page = await Page.findOne({pageHandle: handle})
+        console.log(page)
+        res.status(200).send(page)
+    }catch(err){
+        console.log(err)
+        res.status(400).send(err)
+    }
+    
+
+})
+
+router.get('/find-role/:handle', async(req,res) => {
+    const { handle } = req.params
+
+    const page = await Page.findOne({pageHandle: handle})
+    
+    if(req.user.id == page.pageOwner){
+        res.send('Owner')
+    }else if(page.trainers.includes(req.user._id)){
+        res.send('Trainer')
+    }else if(page.contentCreators.includes(req.user._id)){
+        res.send('Content-Creator')
+    }else{
+        res.send('Visitor')
+    }
+})
+
+const fields = [
+    {name: 'pageOwner'},
+    {name: 'pageHandle'},
+    {name: 'pageTitle'},
+    {name: 'pageAbout'},
+    {name: 'image'}
+  ]
+const upload = multer({storage: storage}).fields(fields)
+let s3credentials = new AWS.S3({
+    accessKeyId: process.env.ACCESSKEYID,
+    secretAccessKey: process.env.SECRETACCESSKEY
+});
+
+router.post('/create', upload, async(req,res)=> {
+    try{
+        let imageUrl = null;
+        if(image){
+        
+            // if there is an image then we generate a unique name 
+            // console.log('here', image);
+            const uniqueValue = req.user.id;
+            const uniqueTimeValue = (Date.now()).toString();
+            const name = image[0].originalname + image[0].size + uniqueValue + uniqueTimeValue;
+
+            let fileParams = {
+                Bucket: process.env.BUCKET,
+                Body: image[0].buffer,
+                Key: name,
+                ACL: 'public-read',
+                ContentType: image[0].mimetype
             }
 
+            const data = await s3credentials.upload(fileParams).promise();  //because this is in a trycatch, error thrown if detected with the upload
+
+            imageUrl = data.Location;
+            imagesArr = [imageUrl];
 
 
-        } catch (err) {
-            console.log('Error', err.message);
-            res.status(500).send(err)
         }
-    } else {
-        res.status(500).send("Not a professional user")
+        console.log(req.body)
+        const professionalUser = req.user.isProfessional;
+        const currentUser = await User.findOne({ _id: req.user.id })
+        if(professionalUser){
+            const {pageOwner, pageHandle, pageTitle, pageAbout} = req.body
+            const {image} = req.files
+            let page = await Page.findOne({ pageHandle });
+            if(page){
+                return res.status(400).send('This Handle is Already Taken')
+            }
+            page = new Page(req.body)
+            page.displayImage = imageUrl
+            await page.save()
+            currentUser.pageOwned = page._id
+            await currentUser.save()
+            res.status(200).send('page created')
+        }else {
+            res.status(400).send("Not a professional user")
+        }
+        
+    }catch(err){
+        res.status(400).send(err)
+    }
+})
+
+router.put('/about', upload, async(req,res) => {
+    try{
+        const {pageAbout, pageHandle} = req.body
+        const page = await Page.findOne({pageHandle: pageHandle})
+        page.pageAbout = pageAbout
+        await page.save()
+        res.status(200).send(page)
+    }catch(err){
+        res.status(400).send(err)
+        console.log(err)
     }
 })
 

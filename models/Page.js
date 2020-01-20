@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const PageSchema = mongoose.Schema({
+    pageHandle: String,
     pageOwner: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'user'
@@ -22,13 +23,18 @@ const PageSchema = mongoose.Schema({
     trainers: [
         {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'professional'
+            ref: 'user'
         }
     ],
     contentCreators: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'user'
-    }]
+    }],
+    posts: [{
+        type: mongoose.Schema.Types.ObjectID,
+        ref: 'post'
+    }],
+    displayImage: String
 
 })
 

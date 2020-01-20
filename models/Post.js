@@ -1,9 +1,13 @@
 const mongoose = require('mongoose');
 
 const PostSchema = mongoose.Schema({
-    owningUser: {
+    postOwnerUser: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'user'
+    },
+    postOwnerPage: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'page'
     },
     isPrivate: {
         type: Boolean,
