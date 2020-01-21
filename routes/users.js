@@ -108,7 +108,7 @@ router.post('/get-viewing-user-profile', async(req, res) => {
   // console.log(user);
 
   //then find the profile by the user id
-  const profile = await Profile.findOne({ user: user._id });
+  const profile = await Profile.findOne({ user: user._id }).populate('user', ['firstname, lastname']);
   // console.log('The profile is:', profile);
 
   res.json({ user, profile });
