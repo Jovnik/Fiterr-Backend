@@ -5,6 +5,7 @@ const PackageSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'page'
     },
+    title: String,
     description: String,
     numberOfSessions: Number,
     price: Number

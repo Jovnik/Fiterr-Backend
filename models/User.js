@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const UserSchema = mongoose.Schema({
     firstname: {
@@ -37,11 +37,24 @@ const UserSchema = mongoose.Schema({
         type: Boolean,
         default: false
     },
+    professional: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'professional'
+    },
     profile: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'profile'
+    },
+    phoneNumber: {
+        type: String,
+        default: null,
+        required: false
+    },
+    pageOwned: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'page'
     }
     
 })
 
-module.exports = mongoose.model('user', UserSchema);
+module.exports = mongoose.model("user", UserSchema);

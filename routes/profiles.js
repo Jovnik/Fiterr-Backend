@@ -7,6 +7,7 @@ const multer = require('multer');
 const AWS = require('aws-sdk');
 require('dotenv').config()
 const mongoose = require('mongoose')
+const Service = require('../models/Service')
 
 mongoose.set('useFindAndModify', false);
 
@@ -89,6 +90,18 @@ router.get('/me', async(req, res) => {
     const myProfile = await Profile.findOne({ user: req.user._id }).populate('user', ['firstname', 'lastname']);
     console.log('myProfile is', myProfile);
     res.send(myProfile);
+})
+//to return services to dashboard for rendering
+router.get('/services', async(req,res)=>{
+    try{
+        const services = await Service.find({enthusiastID: req.user.id})
+        console.log('enthusiast services', services)
+        res.status(200).send(services)
+    }catch(err){
+        res.status(400).send(err)
+        console.log(err)
+    }
+    
 })
 
 // USE THIS SHIT!!!!

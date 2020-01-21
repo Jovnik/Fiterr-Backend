@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
 const User = require('../models/User');
@@ -14,18 +14,17 @@ const AWS = require('aws-sdk');
 const storage = multer.memoryStorage();
 
 const fields = [
-    {name: 'image'},
-    {name: 'postTitle'},
-    {name: 'postDescription'} 
-]
+  { name: "image" },
+  { name: "postTitle" },
+  { name: "postDescription" }
+];
 
 const upload = multer({ storage: storage }).fields(fields);
 
 const s3credentials = new AWS.S3({
-    accessKeyId: process.env.ACCESSKEYID,
-    secretAccessKey: process.env.SECRETACCESSKEY
+  accessKeyId: process.env.ACCESSKEYID,
+  secretAccessKey: process.env.SECRETACCESSKEY
 });
-
 
 router.get('/:id', async(req, res) => {
   try {
@@ -153,6 +152,7 @@ router.delete('/:id', async(req, res) => {
       res.status(500).send('Server Error');
     }
 })
+
 
 
 // @route    PUT api/posts/like/:id   // its a put request because technically we are updating the post

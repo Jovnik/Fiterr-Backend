@@ -5,7 +5,10 @@ const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const Post = require('../models/Post');
 const Profile = require('../models/Profile');
+const Professional = require('../models/Professional')
 const { check, validationResult } = require('express-validator');
+const multer = require('multer');
+const storage = multer.memoryStorage();
 
 // @route       /api/users/register
 // @desc        Register a user and log them in using passport
@@ -108,10 +111,59 @@ router.post('/get-viewing-user-profile', async(req, res) => {
   // console.log(user);
 
   //then find the profile by the user id
-  const profile = await Profile.findOne({ user: user._id }).populate('user', ['firstname, lastname']);
+  const profile = await Profile.findOne({ user: user._id });
   // console.log('The profile is:', profile);
 
   res.json({ user, profile });
+});
+//required below for parsing FormData
+const fields = [
+  {name: 'phoneNumber'}
+]
+const upload = multer({storage: storage}).fields(fields)
+router.post("/professional-activate", upload, async (req, res) => {
+  
+  const { phoneNumber } = req.body;
+  console.log(req.body)
+  console.log(phoneNumber)
+  const { userID } = req.user.id;
+
+  // update user by adding phone number and then swapping boolean
+  // add professional ID to User Model
+
+  const user = await User.findOne({ _id: req.user.id })
+  console.log(user);
+  try{
+    let errors = [];
+    let phoneNumberArr = [];
+    phoneNumberArr = phoneNumber.split('')
+    if (phoneNumber.length != 10) {
+      errors.push({ msg: "Phone Number must be 10 lengths long" })
+    }
+    if (phoneNumberArr[0] != "0" && phoneNumber[1] != "4") {
+      errors.push({ msg: "Please enter an Australian Number" })
+    }
+    if (errors.length != 0) {
+      console.log(errors);
+      res.status(500).send("NOTHING IS WELL")
+    }
+    else{
+      user.phoneNumber = phoneNumber;
+      user.isProfessional = true;
+      const professional = new Professional
+      professional.userId = userID
+      await professional.save() 
+      user.professional = professional._id
+      await user.save()
+      res.status(200).send('Professional Accepted')
+    }
+    
+  }catch(err){
+    console.log(err)
+    res.status(400).send("Server error");
+  }
+
+  
 });
 
 module.exports = router;
