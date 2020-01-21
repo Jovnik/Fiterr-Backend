@@ -42,15 +42,11 @@ const login = async () => {
     return response.headers["set-cookie"];
 };
 
-test("update package", async () => {
+test("delete a package", async () => {
     let cookie = await login();
     response = await request(app)
-        .put("/api/packages/package-update")
+        .delete("/api/packages/package-delete")
         .set("cookie", cookie)
-        .field("id", "5e244669ad64c538f4a1397c")
-        .field("title", "Weights with MD")
-        .field("description", "Learn how to lift with MD")
-        .field("numberOfSessions", 5)
-        .field("price", 25000)
+        .field("id", "5e2626d144912e54d43d9842")
         .expect(200)
 })

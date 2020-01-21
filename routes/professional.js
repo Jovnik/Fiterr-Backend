@@ -6,6 +6,7 @@ const Packages = require('../models/Packages')
 const Page = require('../models/Page')
 const Service = require('../models/Service')
 const passport = require('passport')
+const Session = require('../models/Session')
 const multer = require('multer');
 const storage = multer.memoryStorage();
 const AWS = require('aws-sdk');
@@ -13,28 +14,6 @@ const stripe = require('stripe')(process.env.SECRETSTRIPE);
 require('dotenv').config()
 const mongoose = require('mongoose')
 const { check, validationResult } = require('express-validator');
-
-// @route       /api/professional/package-register
-// @desc        when hit the router will create a new package for the page
-router.post('/package-register', async (req, res) => {
-    const { title, description, numSessions, price } = req.body
-    console.log(req.user.pageOwned);
-
-    try {
-        const newPackage = new Packages({
-            pageID: req.user.pageOwned,
-            title: title,
-            description: description,
-            numberOfSessions: numSessions,
-            price: price
-        })
-        await newPackage.save()
-        res.status(200).send(newPackage)
-    } catch (err) {
-        console.log('Error', err.message);
-        res.status(500).send(err)
-    }
-})
 
 // @route       /api/professional/:id   (:id = pageId)
 // @desc        will display all the packages from one page
@@ -48,7 +27,6 @@ router.get('/:pageId', async (req, res) => {
         res.status(500).send(err)
     }
 })
-
 
 // @route       /api/professional/update/:title
 // @desc        will update the price of a package
@@ -130,20 +108,33 @@ router.post('/:pageHandle/:packageId', upload,async (req, res) => {
     }
 })
 
-
-
-/* --------- CANT COMPLETE BELOW UNTIL PACKAGES ARE COMPLETE ---------*/
-// @route       /api/professional/service-register
-// @desc        when hit router will create a new service for a group of packages
-router.post('/service-register', async (req, res) => {
+const serviceFields = [
+    { name: "serviceID" },
+    { name: "time" },
+    { name: "date" },
+    { name: "location" }
+]
+const serviceUpload = multer({ storage: storage }).fields(serviceFields)
+router.post('/session-create', serviceUpload, async (req, res) => {
     try {
-        console.log(req.params);
-        res.status(200).send("all good brudda")
+        console.log(req.body);
+        const { time, date, location, serviceID } = req.body;
+        const newSession = new Session({
+            serviceID: serviceID,
+            time: time,
+            date: date,
+            location: location
+        })
+        const currentService = await Service.findOne({ _id: req.body.serviceID })
+        currentService.Sessions = newSession
+        await currentService.save()
+        console.log(currentService.Sessions);
+        await newSession.save()
+        res.status(200).send(newSession);
     } catch (err) {
-        console.log('Error', err.message);
+        console.log('error', err);
         res.status(500).send(err)
     }
 })
-
 
 module.exports = router;

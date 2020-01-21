@@ -42,15 +42,16 @@ const login = async () => {
     return response.headers["set-cookie"];
 };
 
-test("update package", async () => {
+// @route:      /api/professional/:pageHandle/:serviceId
+// @desc        creates a session for the user
+test("create a session for a service", async () => {
     let cookie = await login();
     response = await request(app)
-        .put("/api/packages/package-update")
+        .post('/api/professional/session-create')
         .set("cookie", cookie)
-        .field("id", "5e244669ad64c538f4a1397c")
-        .field("title", "Weights with MD")
-        .field("description", "Learn how to lift with MD")
-        .field("numberOfSessions", 5)
-        .field("price", 25000)
+        .field("serviceID", "5e251d25e74044487bb66330")
+        .field("time", "12:00")
+        .field("date", Date.now())
+        .field("location", "Caufield")
         .expect(200)
 })
