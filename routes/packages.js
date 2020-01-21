@@ -84,8 +84,15 @@ router.put("/package-update", packageUpdateUpload, async (req, res) => {
 // @old_route       /api/professional/:pageId/:packageId
 // @new_route       /api/packages/:pageHandle/:packageId
 // @desc        will purchase a package for an enthusiast 
-
-router.post('/:pageHandle/:packageId', async (req, res) => {
+const packagePurchaseFields = [
+    {name: 'price'},
+    {name: 'id'},
+    {name: 'receipt_email'},
+    {name: 'amount'},
+    {name: 'source'}
+]
+const packagePurchaseUpload = multer({ storage: storage }).fields(packagePurchaseFields)
+router.post('/:pageHandle/:packageId', packagePurchaseUpload,async (req, res) => {
     console.log(req.user);
     try {
         const selectedPage = await Page.findOne({ pageHandle: req.params.pageHandle })
@@ -93,16 +100,17 @@ router.post('/:pageHandle/:packageId', async (req, res) => {
         const amount = packagePurchased.price
         console.log('package purchased', packagePurchased);
         console.log('selected page', selectedPage);
-        // const customer = await stripe.customers.create({
-        //     email: req.body.stripeEmail,
-        //     source: req.body.stripeToken
-        // })
-        // stripe.charges.create({
-        //     amount,
-        //     description: packagePurchased.description,
-        //     currency: 'aud',
-        //     customer: customer.id
-        // })
+        const customer = await stripe.customers.create({
+            email: req.body.receipt_email,
+            source: req.body.source
+        })
+        const newCharge = await stripe.charges.create({
+            amount,
+            description: packagePurchased.description,
+            currency: 'aud',
+            customer: customer.id
+        })
+        console.log('newCHarge', newCharge)
         const newService = new Service({
             enthusiastID: req.user.id,
             professionalID: selectedPage.pageOwner,
@@ -111,10 +119,11 @@ router.post('/:pageHandle/:packageId', async (req, res) => {
             DatePurchased: Date.now(),
             quantityRemaining: packagePurchased.numberOfSessions,
             Sessions: null,
+
         })
         console.log('service created', newService)
         await newService.save()
-        res.status(200).send(newService)
+        res.status(200).send(newCharge)
     } catch (err) {
         console.log('Error', err);
         res.status(500).send(err)
