@@ -58,19 +58,24 @@ router.get('/:pageHandle/:packageId', async (req, res) => {
 // @new_route       /api/packages/package-price-update
 // @desc        will update the price of a package
 const fields = [
+    { name: 'title' },
+    { name: 'description' },
+    { name: 'numberOfSessions' },
     { name: 'price' },
     { name: 'id' }
 ]
 const upload = multer({ storage: storage }).fields(fields)
-router.put("/package-price-update", upload, async (req, res) => {
+router.put("/package-update", upload, async (req, res) => {
     try {
-        const { price, id } = req.body
-        console.log(price, id)
-        const package = await Packages.findOne({ _id: id })
-        package.price = price
-        await package.save()
-        console.log('updatedpackage', package)
-        res.status(200).send(package)
+        const { title, description, numberOfSessions, price, id } = req.body
+        const updatedPackage = await Packages.findOne({ _id: id })
+        updatedPackage.title = title
+        updatedPackage.description = description
+        updatedPackage.numberOfSessions = numberOfSessions
+        updatedPackage.price = price
+        await updatedPackage.save()
+        console.log('updatedpackage', updatedPackage)
+        res.status(200).send(updatedPackage)
     } catch (err) {
         res.status(500).send(err.message)
     }
