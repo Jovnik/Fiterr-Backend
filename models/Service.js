@@ -26,7 +26,8 @@ const ServiceSchema = mongoose.Schema({
     pageID: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'page'
-    }
+    },
+    receiptUrl: String
 })
 
 module.exports = mongoose.model('service', ServiceSchema);
