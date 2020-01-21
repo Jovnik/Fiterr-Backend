@@ -105,7 +105,6 @@ router.get('/services', async(req,res)=>{
     
 })
 
-// USE THIS SHIT!!!!
 router.get('/other-profile/:username', async(req, res) => {
     const { username } = req.params;
     const otherUser = await User.findOne({ username });
@@ -114,7 +113,6 @@ router.get('/other-profile/:username', async(req, res) => {
     res.json(otherProfile);
 })
 
-// THIS IS CURRENTLY USED ON THE FRONTEND TO GET YOUR OWN PROFILE
 // @route       /api/profiles
 // @desc        Get a profile
 router.get('/', async (req,res)=> {
@@ -127,30 +125,46 @@ router.get('/', async (req,res)=> {
 // @route       /api/profiles/follow/:id
 // @desc        Put our profile id in the following profiles follower field, and put the following id in our profiles following field
 router.get('/follow/:id', async(req, res) => {
-    const followId = req.params.id;     // this is the 'viewingUser's' profile id
-    // console.log('followid', followId); 
+    const followId = req.params.id;     // this is the otherUser's profile id
 
-    const myProfile = await Profile.findOneAndUpdate({ user: req.user._id }, {$push: {following: followId}}, {new: true});
-    // console.log('MINE', myProfile);
+    // put their id in our following array
+    const myProfile = await Profile.findById(req.user.profile);
+    myProfile.following.push(followId);
+    const mySavedProfile = await myProfile.save();
+    console.log('*', mySavedProfile.following);
 
-    const followingProfile = await Profile.findByIdAndUpdate(followId, {$push: {followers: myProfile._id}}, {new: true});
-    // console.log('FOLLOWING', followingProfile);
+    // put our id in their followers array
+    const otherProfile = await Profile.findOne({user: followId});
+    otherProfile.followers.push(req.user._id);
+    const savedOtherProfile = await otherProfile.save();
+    console.log('**the other profile', savedOtherProfile.followers);
 
-    res.send('Following field updated');
+    res.json(mySavedProfile.following);
 })
 
 // @route       /api/profiles/unfollow/:id
 // @desc        Remove our profile id from the following profiles follower field and remove the following id from our profiles following field
 router.get('/unfollow/:id', async(req, res) => {
     const followId = req.params.id;
-    
-    // cant log this, need to check update in atlas
-    await Profile.updateOne({ user: req.user._id }, {$pullAll: {following: [followId]}});
-    // can use $pullAll or $pull - i think $pull only removes one entry where as $pullAll removes all of them
-    
-    await Profile.updateOne({ _id: followId }, {$pullAll: {followers: [req.user.profile]}});
 
-    res.send('Unfollowing updated')
+    // find my profile and remove the followId from the following array
+    const profile = await Profile.findById(req.user.profile);   // this is our profile- we are going to remove the followId from following
+    const removeIndex = profile.following.findIndex(followingUser => followingUser === followId);
+    profile.following.splice(removeIndex, 1);
+    const savedProfile = await profile.save();
+    console.log('----savedproffollw', savedProfile.following);
+
+
+    // remove my user id from their followers array 
+    const followingProfile = await Profile.findOne({ user: followId });  //isnt follow id a user id
+    // console.log('the following profile kuz', followingProfile); 
+    const removeIndexFollower = followingProfile.followers.findIndex(follower => follower === req.user._id);
+    followingProfile.followers.splice(removeIndexFollower, 1);
+    const savedFollowingProfile = await followingProfile.save();
+    console.log('savedfollowingProfile', savedFollowingProfile.followers);
+
+
+    res.json(savedProfile.following);
 }) 
 
 // POSTMAN ROUTE ONLY
