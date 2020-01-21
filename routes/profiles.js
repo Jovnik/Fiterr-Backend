@@ -91,6 +91,7 @@ router.get('/me', async(req, res) => {
     console.log('myProfile is', myProfile);
     res.send(myProfile);
 })
+
 //to return services to dashboard for rendering
 router.get('/services', async(req,res)=>{
     try{

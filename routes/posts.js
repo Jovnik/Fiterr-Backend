@@ -28,8 +28,7 @@ const s3credentials = new AWS.S3({
 
 router.get('/:id', async(req, res) => {
   try {
-    console.log('get the posts');
-    const posts = await Post.find({ owningUser: req.params.id })
+    const posts = await Post.find({ postOwnerUser: req.params.id })
                             .sort({ date: -1 })
                             .populate(
                               {path: 'comments', 
@@ -37,9 +36,10 @@ router.get('/:id', async(req, res) => {
                                  { path: 'user', select: 'firstname lastname', populate: {path: 'profile', select: 'displayImage'} }, 
                                  { path: 'replies', populate: {path: 'user', select: 'firstname lastname', populate: {path: 'profile', select: 'displayImage'} } }
                                 ] 
-                              })                           
+                              })          
 
-    console.log(posts);
+
+    // console.log('Posts for getposts', posts);
 
     res.json(posts);
     
@@ -72,7 +72,7 @@ router.get('/newsfeed-posts', async(req, res) => {
 
 
   for (const user of userIds) {
-    let posts = await Post.find({owningUser: user});
+    let posts = await Post.find({postOwnerUser: user});
     newsfeedPosts = [...newsfeedPosts, ...posts];
     // console.log(posts);
   }
@@ -114,7 +114,7 @@ router.post('/create-post', upload, async (req, res) => {
         }
 
         const newPost = new Post({
-            owningUser: req.user._id,
+            postOwnerUser: req.user._id,
             content: postDescription,
             image: imageUrl
         });
@@ -139,7 +139,7 @@ router.delete('/:id', async(req, res) => {
       // console.log('This is the post', post);
 
       // Check you are the owning user
-      if (!post.owningUser.equals(req.user._id)) {
+      if (!post.postOwnerUser.equals(req.user._id)) {
         return res.status(401).json({ msg: 'User not authorized' });
       }
 
