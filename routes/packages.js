@@ -57,15 +57,15 @@ router.get('/:pageHandle/:packageId', async (req, res) => {
 // @old_route       /api/professional/update/:title
 // @new_route       /api/packages/package-price-update
 // @desc        will update the price of a package
-const fields = [
+const packageUpdateFields = [
     { name: 'title' },
     { name: 'description' },
     { name: 'numberOfSessions' },
     { name: 'price' },
     { name: 'id' }
 ]
-const upload = multer({ storage: storage }).fields(fields)
-router.put("/package-update", upload, async (req, res) => {
+const packageUpdateUpload = multer({ storage: storage }).fields(packageUpdateFields)
+router.put("/package-update", packageUpdateUpload, async (req, res) => {
     try {
         const { title, description, numberOfSessions, price, id } = req.body
         const updatedPackage = await Packages.findOne({ _id: id })
@@ -115,6 +115,23 @@ router.post('/:pageHandle/:packageId', async (req, res) => {
         console.log('service created', newService)
         await newService.save()
         res.status(200).send(newService)
+    } catch (err) {
+        console.log('Error', err);
+        res.status(500).send(err)
+    }
+})
+
+
+const packageDeleteFields = [
+    { name: 'id' }
+]
+const packageDeleteUpload = multer({ storage: storage }).fields(packageDeleteFields)
+router.delete('/package-delete', packageDeleteUpload, async (req, res) => {
+    try {
+        const { id } = req.body
+        const selectedPackage = await Packages.findOneAndDelete({ _id: id })
+        selectedPackage.save()
+        res.status(200).end()
     } catch (err) {
         console.log('Error', err);
         res.status(500).send(err)
