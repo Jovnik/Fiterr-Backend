@@ -73,7 +73,7 @@ router.get('/trainer-upcoming-sessions', async (req, res) => {
     }
 })
 
-router.put('/trainer-approval', upload, async (req, res) => {
+router.put('/trainer-approval', serviceUpload, async (req, res) => {
     try {
         const { id } = req.body
         let updateSession = await Session.findOneAndUpdate({ _id: id }, { trainerApproval: true })
