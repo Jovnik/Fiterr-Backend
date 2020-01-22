@@ -33,33 +33,11 @@ const login = async () => {
     return response.headers["set-cookie"];
 };
 
-const stripeGenToken = async () => {
-    try {
-        const token = await stripe.tokens.create(
-            {
-                card: {
-                    number: '4242424242424242',
-                    exp_month: 1,
-                    exp_year: 2021,
-                    cvc: '314',
-                }
-            })
-        return token
-    } catch (err) {
-        console.log(err.message);
-    }
-}
-
-// @route       /api/professional/:packageId
-// @desc        will purchase a package for an enthusiast 
-test("purchase a package using stripe and create a service", async () => {
-    const token = await stripeGenToken();
+test("delete a package", async () => {
     let cookie = await login();
     response = await request(app)
-        .post('/api/packages/MDFITNESS/Cardio')
+        .delete("/api/packages/package-delete")
         .set("cookie", cookie)
-        .send({
-            receipt_email: "customer1@email.com",
-            source: token.id
-        })
+        .field("id", "5e27de67821165310fd3286a")
+        .expect(200)
 })

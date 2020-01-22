@@ -28,19 +28,9 @@ const PostSchema = mongoose.Schema({
         }
     ],
     comments: [
-        {
-            user: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'user'
-            },
-            text: {
-                type: String,
-                required: true
-            },
-            date: {
-                type: Date,
-                default: Date.now
-            }
+        { 
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'comment'
         }
     ],
     shared: [
