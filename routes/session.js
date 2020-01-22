@@ -15,33 +15,33 @@ require('dotenv').config()
 const mongoose = require('mongoose')
 const { check, validationResult } = require('express-validator');
 
-
-router.get('/view-services', async (req, res) => {
+const serviceFields = [
+    { name: "serviceID" },
+    { name: "time" },
+    { name: "date" },
+    { name: "location" }
+]
+const serviceUpload = multer({ storage: storage }).fields(serviceFields)
+router.post('/session-create', serviceUpload, async (req, res) => {
     try {
-        // const selectedPage = await Page.findOne({ pageHandle: req.params.pageHandle })
-        console.log(req.user);
-        const currentUserId = req.user._id
-        console.log(currentUserId);
-        const userService = await Service.find({ enthusiastID: req.user._id })
-        // console.log(selectedPage);
-        console.log(userService);
-        res.status(200).send(userService)
+        console.log(req.body);
+        const { time, date, location, serviceID } = req.body;
+        const newSession = new Session({
+            serviceID: serviceID,
+            time: time,
+            date: date,
+            location: location
+        })
+        const currentService = await Service.findOne({ _id: req.body.serviceID })
+        currentService.Sessions = newSession
+        await currentService.save()
+        console.log(currentService.Sessions);
+        await newSession.save()
+        res.status(200).send(newSession);
     } catch (err) {
-        console.log('Error', err.message);
+        console.log('error', err);
         res.status(500).send(err)
     }
 })
-
-
-const serviceFields = [
-    { name: "serviceID" },
-    { name: "quantityRemaining" }
-]
-const serviceUpload = multer({ storage: storage }).fields(serviceFields)
-router.put('/update-service', serviceUpload, async (req, res) => {
-
-})
-
-
 
 module.exports = router;

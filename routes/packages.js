@@ -85,14 +85,14 @@ router.put("/package-update", packageUpdateUpload, async (req, res) => {
 // @new_route       /api/packages/:pageHandle/:packageId
 // @desc        will purchase a package for an enthusiast 
 const packagePurchaseFields = [
-    {name: 'price'},
-    {name: 'id'},
-    {name: 'receipt_email'},
-    {name: 'amount'},
-    {name: 'source'}
+    { name: 'price' },
+    { name: 'id' },
+    { name: 'receipt_email' },
+    { name: 'amount' },
+    { name: 'source' }
 ]
 const packagePurchaseUpload = multer({ storage: storage }).fields(packagePurchaseFields)
-router.post('/:pageHandle/:packageId', packagePurchaseUpload,async (req, res) => {
+router.post('/:pageHandle/:packageId', packagePurchaseUpload, async (req, res) => {
     console.log(req.user);
     try {
         const selectedPage = await Page.findOne({ pageHandle: req.params.pageHandle })
@@ -110,7 +110,7 @@ router.post('/:pageHandle/:packageId', packagePurchaseUpload,async (req, res) =>
             currency: 'aud',
             customer: customer.id
         })
-        console.log('newCHarge', newCharge)
+        console.log('newCharge', newCharge)
         const newService = new Service({
             enthusiastID: req.user.id,
             professionalID: selectedPage.pageOwner,

@@ -26,17 +26,59 @@ const s3credentials = new AWS.S3({
   secretAccessKey: process.env.SECRETACCESSKEY
 });
 
+
+// @route       /api/posts/newsfeed-posts
+// @desc        Get the posts (from those you are following) that will make up the newsfeed
+router.get('/newsfeed', async(req, res) => {
+
+  // need to get the user id's of the users im following from my profile
+  // if we get the user ids we can just find the posts because posts are also linked by userIDs with postOwnerUser
+
+  const profile = await Profile.findOne({user: req.user._id});  // this is your profile
+  // console.log(profile);
+  const following = profile.following;  // following field contains PROFILE ids
+  following.push(req.user._id);
+  // console.log(following);
+
+  let newsfeedPosts = [];
+
+  for (const user of following) {
+    let posts = await Post.find({postOwnerUser: user}).sort({ date: -1 })
+    .populate([
+      {path: 'comments', 
+        populate: [
+         { path: 'user', select: 'firstname lastname', populate: {path: 'profile', select: 'displayImage'} }, 
+         { path: 'replies', populate: {path: 'user', select: 'firstname lastname', populate: {path: 'profile', select: 'displayImage'} } }
+        ] 
+      },
+      {path: 'postOwnerUser', select: 'firstname lastname', populate: {path: 'profile', select: 'displayImage'}}
+    ]) ;
+    newsfeedPosts = [...newsfeedPosts, ...posts];
+
+  }
+  
+  const sortedPosts = newsfeedPosts.sort((post1, post2) => new Date(post2.date) - new Date(post1.date));
+  console.log('these are the newsfeed posts', sortedPosts);
+
+  res.json(newsfeedPosts);
+})
+
+
+// THIS IS WHERE THAT BULLSHIT ASS ERROR IS AT
 router.get('/:id', async(req, res) => {
+  console.log('THE PARAM', req.params.id);
   try {
     const posts = await Post.find({ postOwnerUser: req.params.id })
                             .sort({ date: -1 })
-                            .populate(
+                            .populate([
                               {path: 'comments', 
                                 populate: [
                                  { path: 'user', select: 'firstname lastname', populate: {path: 'profile', select: 'displayImage'} }, 
                                  { path: 'replies', populate: {path: 'user', select: 'firstname lastname', populate: {path: 'profile', select: 'displayImage'} } }
                                 ] 
-                              })          
+                              },
+                              {path: 'postOwnerUser', select: 'firstname lastname', populate: {path: 'profile', select: 'displayImage'}}
+                            ])          
 
 
     // console.log('Posts for getposts', posts);
@@ -44,42 +86,9 @@ router.get('/:id', async(req, res) => {
     res.json(posts);
     
   } catch (err) {
-    console.log(err);
+    console.log('ERROR1', err);
     res.status(500).send('Server Error');
   }
-})
-
-
-// @route       /api/posts/newsfeed-posts
-// @desc        Get the posts (from those you are following) that will make up the newsfeed
-router.get('/newsfeed-posts', async(req, res) => {
-  const profile = await Profile.findOne({user: req.user._id});  // this is your profile
-  // console.log(profile);
-  const following = profile.following;  // following field contains PROFILE ids
-  console.log(following);
-
-  let newsfeedPosts = [];
-  let userIds = [];
-
-
-  for (const id of following) {
-    let profile = await Profile.findById(id);
-    // console.log('--', profile.user);
-    userIds.push(profile.user)
-  }
-  // NOTE: if we use profile IDS to link to posts, then all code up to here is not needed
-  // we just need the user ids to be able to loop through them and fetch their individual posts
-
-
-  for (const user of userIds) {
-    let posts = await Post.find({postOwnerUser: user});
-    newsfeedPosts = [...newsfeedPosts, ...posts];
-    // console.log(posts);
-  }
-
-  // console.log('these are the newsfeed posts', newsfeedPosts);
-
-  res.json(newsfeedPosts);
 })
 
 
@@ -118,12 +127,13 @@ router.post('/create-post', upload, async (req, res) => {
             content: postDescription,
             image: imageUrl
         });
-        // console.log(newPost);
-        await newPost.save();
-        res.send(newPost);
+        const { _id } = await newPost.save();
+        const savedPost = await Post.findById(_id).populate({path: 'postOwnerUser', select: 'firstname lastname', populate: {path: 'profile', select: 'displayImage'}})
+
+        res.send(savedPost);
 
     } catch (err) {
-        console.error('Error:', err.message);
+        console.error('Error 2:', err.message);
         res.status(500).send(err)
     };
 });
@@ -148,7 +158,7 @@ router.delete('/:id', async(req, res) => {
       res.json({ msg: 'Post removed' });
       
     } catch (err) {
-      console.error(err.message);
+      console.error('ERROR 3', err.message);
       res.status(500).send('Server Error');
     }
 })
