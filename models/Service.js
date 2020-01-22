@@ -15,7 +15,7 @@ const ServiceSchema = mongoose.Schema({
     },
     DatePurchased: Date,
     quantityRemaining: Number,
-    Sessions: [{
+    sessions: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'session'
     }],

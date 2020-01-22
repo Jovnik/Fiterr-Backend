@@ -71,7 +71,7 @@ router.get('/:pageHandle/:packageId', async (req, res) => {
 // @desc        will purchase a package for an enthusiast 
 
 router.post('/:pageHandle/:packageId', upload,async (req, res) => {
-    console.log(req.user);
+    // console.log(req.user);
     try {
         const selectedPage = await Page.findOne({ pageHandle: req.params.pageHandle })
         const packagePurchased = await Packages.findOne({ _id: req.params.packageId })
@@ -95,9 +95,8 @@ router.post('/:pageHandle/:packageId', upload,async (req, res) => {
             pageID: packagePurchased.pageID,
             packageID: packagePurchased._id,
             DatePurchased: Date.now(),
-            quantityRemaining: packagePurchased.numberOfSessions,
-            Sessions: null,
-
+            quantityRemaining: packagePurchased.numberOfSessions
+            
         })
         console.log('service created', newService)
         await newService.save()

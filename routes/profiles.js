@@ -8,6 +8,7 @@ const AWS = require('aws-sdk');
 require('dotenv').config()
 const mongoose = require('mongoose')
 const Service = require('../models/Service')
+const Session = require('../models/Session')
 
 mongoose.set('useFindAndModify', false);
 
@@ -17,7 +18,13 @@ const storage = multer.memoryStorage()
 const fields = [
     {name: 'image'},
     {name: 'aboutMe'},
-    {name: 'fitnessInterests'} 
+    {name: 'fitnessInterests'},
+    {name: 'time'},
+    {name: 'date'},
+    {name: 'location'},
+    {name: 'trainer'},
+    {name: 'serviceID'},
+    {name: 'id'}
 ]
 
 const upload = multer({ storage: storage }).fields(fields);
@@ -87,7 +94,7 @@ router.post('/create', upload, async (req,res) => {
 // @route       /api/profiles/me
 // @desc        Get my profile thats linked to the logged in user
 router.get('/me', async(req, res) => {
-    const myProfile = await Profile.findOne({ user: req.user._id }).populate('user', ['firstname', 'lastname']);
+    const myProfile = await Profile.findOne({ user: req.user.id }).populate('user', ['firstname', 'lastname']);
     console.log('myProfile is', myProfile);
     res.send(myProfile);
 })
@@ -95,8 +102,8 @@ router.get('/me', async(req, res) => {
 //to return services to dashboard for rendering
 router.get('/services', async(req,res)=>{
     try{
-        const services = await Service.find({enthusiastID: req.user.id})
-        console.log('enthusiast services', services)
+        const services = await Service.find({enthusiastID: req.user.id}).populate('packageID').populate({path: 'Sessions', populate: {path: 'trainer', model: 'user'}})
+        
         res.status(200).send(services)
     }catch(err){
         res.status(400).send(err)
@@ -105,6 +112,66 @@ router.get('/services', async(req,res)=>{
     
 })
 
+router.post('/session', upload, async(req,res)=> {
+    try{
+        console.log(req.body)
+        const {time, date, location, trainer, serviceID} = req.body
+        let session = new Session({
+            serviceID: serviceID,
+            trainer: trainer,
+            time: time,
+            date: date,
+            location: location
+        })
+        await session.save()
+        const subtractQuantityService = await Service.findOne({_id: serviceID})
+        subtractQuantityService.quantityRemaining -=1
+        await subtractQuantityService.save()
+        const serviceUpdated = await Service.findOneAndUpdate({_id: serviceID}, {$push: {sessions: session._id}})
+        const services = await Service.find({enthusiastID: req.user.id}).populate('packageID').populate({path: 'sessions', populate: {path: 'trainer', model: 'user'}})
+        console.log('session created')
+        res.status(200).send(services)
+    }
+    catch(err){
+        console.log(err)
+        res.status(400).send(err)
+    }
+
+})
+
+router.get('/trainer-pending-sessions', async(req,res)=>{
+    try{
+        const sessions = await Session.find({trainer: req.user._id, trainerApproval: false})
+        console.log(sessions)
+        res.status(200).send(sessions)
+    }
+    catch(err){
+        console.log(err)
+        res.status(400).send(err)
+    }
+})
+
+router.get('/trainer-upcoming-sessions', async(req,res)=>{
+    try{
+        const sessions = await Session.find({trainer: req.user._id, trainerApproval: true})
+        res.status(200).send(sessions)
+    }catch(err){
+        console.log(err)
+        res.status(400).send(err)
+    }
+})
+
+router.put('/trainer-approval', upload, async(req,res)=>{
+    try{
+        const {id} = req.body
+        let updateSession = await Session.findOneAndUpdate({_id: id}, {trainerApproval: true})
+        res.status(200).send(updateSession)
+    }
+    catch(err){
+        console.log(err)
+        res.status(400).send(err)
+    }
+})
 // USE THIS SHIT!!!!
 router.get('/other-profile/:username', async(req, res) => {
     const { username } = req.params;
