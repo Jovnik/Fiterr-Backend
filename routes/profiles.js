@@ -99,10 +99,9 @@ router.get('/me', async (req, res) => {
 })
 
 //to return services to dashboard for rendering
-router.get('/services', async (req, res) => {
-    try {
-        const services = await Service.find({ enthusiastID: req.user.id }).populate('packageID').populate({ path: 'Sessions', populate: { path: 'trainer', model: 'user' } })
-
+router.get('/services', async(req,res)=>{
+    try{
+        const services = await Service.find({enthusiastID: req.user.id}).populate([{path: 'packageID'}, {path: 'sessions', populate: {path: 'trainer', model: 'user'}}])
         res.status(200).send(services)
     } catch (err) {
         res.status(400).send(err)
