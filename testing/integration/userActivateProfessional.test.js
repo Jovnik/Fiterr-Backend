@@ -2,7 +2,6 @@ const request = require("supertest");
 const app = require("../../app");
 const mongoose = require("mongoose");
 const stripe = require('stripe')(process.env.SECRETSTRIPE)
-let cookie = null;
 
 beforeEach(() => {
     dbOptions = { useNewUrlParser: true, useUnifiedTopology: true };
@@ -11,22 +10,14 @@ beforeEach(() => {
         dbOptions,
         err => {
             if (err) {
-                // console.log("not connected");
+                console.log(err);
             } else {
-                // console.log("connected");
             }
         }
     );
 });
 
-// @desc: logout function for future tests.
-const logout = async () => {
-    response = await request(app)
-        .post("/api/users/logout")
-};
-
 afterEach(() => {
-    logout()
     mongoose.connection.close();
 });
 
@@ -36,7 +27,7 @@ const login = async () => {
     const response = await request(app)
         .post("/api/users/login")
         .send({
-            email: "md@email.com",
+            email: "md@gmail.com",
             password: "asdfgh"
         });
     return response.headers["set-cookie"];
@@ -52,8 +43,5 @@ test("switches user to professional once phone number is entered", async () => {
         .send({
             phoneNumber: "0412345178"
         })
-        .then(response => {
-            console.log(response.text);
-            expect(response.text).toBeTruthy();
-        })
+        .expect(200)
 });

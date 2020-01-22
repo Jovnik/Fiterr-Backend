@@ -33,16 +33,13 @@ const login = async () => {
     return response.headers["set-cookie"];
 };
 
-// @route:      /api/professional/:pageHandle/:serviceId
-// @desc        creates a session for the user
-test("create a session for a service", async () => {
+
+test("view services related to one enthusiast", async () => {
     let cookie = await login();
     response = await request(app)
-        .post('/api/sessions/session-create')
+        .get("/api/services/view-services")
         .set("cookie", cookie)
-        .field("serviceID", "5e27e3bc7ac2f932b16920d6")
-        .field("time", "12:00")
-        .field("date", Date.now())
-        .field("location", "Caufield")
-        .expect(200)
+        .then(res => {
+            console.log(res.text);
+        })
 })
