@@ -12,14 +12,10 @@ const mongoose = require('mongoose')
 
 router.get('/get-page/:handle', async (req, res) => {
     try {
-        console.log(req.user)
         const handle = req.params.handle
-        console.log(handle)
         const page = await Page.findOne({ pageHandle: handle }).populate('packages').populate('posts')
-        console.log(page)
         res.status(200).send(page)
     } catch (err) {
-        console.log(err)
         res.status(400).send(err)
     }
 
@@ -90,7 +86,6 @@ router.post('/create', upload, async (req, res) => {
 
 
         }
-        console.log(req.body)
         const pageHandle = req.body.pageHandle
         const newPageHandle = pageHandle.replace(/\s/g, '');
         const professionalUser = req.user.isProfessional;
@@ -115,15 +110,11 @@ router.post('/create', upload, async (req, res) => {
         }
 
     } catch (err) {
-        console.log(err);
         res.status(400).send(err)
     }
 })
 
 router.delete('/delete', async (req, res) => {
-    let currentUser = req.user.pageOwned
-    console.log(req.user.pageOwned);
-    console.log(currentUser);
     try {
         await Page.findOneAndDelete({ _id: req.user.pageOwned })
         const updateUser = await User.findOneAndUpdate({ _id: req.user.id }, {
@@ -132,7 +123,6 @@ router.delete('/delete', async (req, res) => {
         updateUser.save()
         res.status(200).end()
     } catch (err) {
-        console.log(err.message);
         res.status(400).send(err)
     }
 })
@@ -149,37 +139,15 @@ router.put('/about', upload, async (req, res) => {
         console.log(err)
     }
 })
-router.post('/package-create', upload, async (req, res) => {
+
+router.get('/trainers/:pageID', async (req, res) => {
     try {
-        const { pageID, title, description, numberOfSessions, price } = req.body
-        console.log('eherreef')
-        console.log('req.bod', req.body)
-        console.log('pageID', pageID)
-        const newPackage = new Package(req.body)
-        console.log('package', newPackage)
-        await newPackage.save()
-        let page = await Page.findOneAndUpdate({ _id: pageID }, { $push: { packages: newPackage } })
-        await page.save()
-        page = await Page.findOne({ _id: pageID }).populate('packages')
-        console.log('page', page)
-
-        // let updatedPage = await Page.findOne({pageID: pageID}).populate('packages')
-        // console.log('updated', updatedPage)
-        res.send(page)
-    } catch (err) {
-        res.status(400).send(err)
-        console.log(err)
-    }
-})
-
-router.get('/trainers/:pageID', async(req,res) =>{
-    try{
         const id = req.params.pageID
-        const page = await Page.findOne({_id: id}).populate('trainers')
+        const page = await Page.findOne({ _id: id }).populate('trainers')
         const trainers = page.trainers
         res.status(200).send(trainers)
     }
-    catch(err){
+    catch (err) {
         console.log(err)
         res.status(400).send(err)
     }

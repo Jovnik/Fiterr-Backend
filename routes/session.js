@@ -15,7 +15,7 @@ require('dotenv').config()
 const mongoose = require('mongoose')
 const { check, validationResult } = require('express-validator');
 
-const serviceFields = [
+const sessionFields = [
     { name: "serviceID" },
     { name: "time" },
     { name: "date" },
@@ -23,10 +23,9 @@ const serviceFields = [
     { name: "trainer" },
     { name: "id" }
 ]
-const serviceUpload = multer({ storage: storage }).fields(serviceFields)
-router.post('/session-create', serviceUpload, async (req, res) => {
+const sessionUpload = multer({ storage: storage }).fields(sessionFields)
+router.post('/session-create', sessionUpload, async (req, res) => {
     try {
-        console.log(req.body)
         const { time, date, location, trainer, serviceID } = req.body
         let session = new Session({
             serviceID: serviceID,
@@ -41,7 +40,6 @@ router.post('/session-create', serviceUpload, async (req, res) => {
         await subtractQuantityService.save()
         const serviceUpdated = await Service.findOneAndUpdate({ _id: serviceID }, { $push: { sessions: session._id } })
         const services = await Service.find({ enthusiastID: req.user.id }).populate('packageID').populate({ path: 'sessions', populate: { path: 'trainer', model: 'user' } })
-        console.log('session created')
         res.status(200).send(services)
     }
     catch (err) {
@@ -73,7 +71,7 @@ router.get('/trainer-upcoming-sessions', async (req, res) => {
     }
 })
 
-router.put('/trainer-approval', serviceUpload, async (req, res) => {
+router.put('/trainer-approval', sessionUpload, async (req, res) => {
     try {
         const { id } = req.body
         let updateSession = await Session.findOneAndUpdate({ _id: id }, { trainerApproval: true })

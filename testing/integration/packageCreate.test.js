@@ -2,7 +2,6 @@ const request = require("supertest");
 const app = require("../../app");
 const mongoose = require("mongoose");
 const stripe = require('stripe')(process.env.SECRETSTRIPE)
-let cookie = null;
 
 beforeEach(() => {
     dbOptions = { useNewUrlParser: true, useUnifiedTopology: true };
@@ -11,22 +10,14 @@ beforeEach(() => {
         dbOptions,
         err => {
             if (err) {
-                // console.log("not connected");
+                console.log(err);
             } else {
-                // console.log("connected");
             }
         }
     );
 });
 
-// @desc: logout function for future tests.
-const logout = async () => {
-    response = await request(app)
-        .post("/api/users/logout")
-};
-
 afterEach(() => {
-    logout()
     mongoose.connection.close();
 });
 
@@ -36,7 +27,7 @@ const login = async () => {
     const response = await request(app)
         .post("/api/users/login")
         .send({
-            email: "md@email.com",
+            email: "md@gmail.com",
             password: "asdfgh"
         });
     return response.headers["set-cookie"];
@@ -47,13 +38,14 @@ const login = async () => {
 test("Creates a new package for a page", async () => {
     let cookie = await login();
     response = await request(app)
-        .post("/api/professional/package-register")
+        .post("/api/packages/package-register")
         .set("cookie", cookie)
         .send({
+            pageID: "5e27de08f64e5330f38bbbf4",
             title: "Cardio",
-            description: "get your heart racing with MD",
-            numSessions: 3,
-            price: 219.99
+            description: " get your heart racing with MD",
+            numberOfSessions: 3,
+            price: 21999
         })
         .expect(200)
 })

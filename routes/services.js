@@ -18,13 +18,7 @@ const { check, validationResult } = require('express-validator');
 
 router.get('/view-services', async (req, res) => {
     try {
-        // const selectedPage = await Page.findOne({ pageHandle: req.params.pageHandle })
-        console.log(req.user);
-        const currentUserId = req.user._id
-        console.log(currentUserId);
         const userService = await Service.find({ enthusiastID: req.user._id })
-        // console.log(selectedPage);
-        console.log(userService);
         res.status(200).send(userService)
     } catch (err) {
         console.log('Error', err.message);
