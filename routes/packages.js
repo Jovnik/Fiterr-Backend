@@ -18,16 +18,18 @@ const { check, validationResult } = require('express-validator');
 // @old_route       /api/professional/package-register
 // @new_route       /api/packages/package-register
 // @desc        when hit the router will create a new package for the page
-const packageCreateFields = [
-    { name: "pageID" },
-    { name: "title" },
-    { name: "description" },
-    { name: "numberOfSessions" },
-    { name: "price" }
+
+const packageFields = [
+    {name: 'pageID'},
+    {name: 'title'},
+    {name: 'description'},
+    {name: 'numberOfSessions'},
+    {name: 'price'}
 ]
-const packageCreateUpload = multer({ storage: storage }).fields(packageCreateFields)
-router.post('/package-register', packageCreateUpload, async (req, res) => {
-    const { pageID, title, description, numberOfSessions, price } = req.body
+const packageUpload = multer({ storage: storage }).fields(packageFields)
+router.post('/package-register', packageUpload, async (req, res) => {
+    const { title, description, numberOfSessions, price, pageID} = req.body
+
     try {
         const newPackage = new Packages({
             pageID: pageID,
