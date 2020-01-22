@@ -1,23 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
-const Profile = require('../models/Profile')
 const Packages = require('../models/Packages')
 const Page = require('../models/Page')
 const Service = require('../models/Service')
-const passport = require('passport')
-const Session = require('../models/Session')
 const multer = require('multer');
 const storage = multer.memoryStorage();
-const AWS = require('aws-sdk');
 const stripe = require('stripe')(process.env.SECRETSTRIPE);
 require('dotenv').config()
-const mongoose = require('mongoose')
-const { check, validationResult } = require('express-validator');
 
-// @old_route       /api/professional/package-register
-// @new_route       /api/packages/package-register
-// @desc        when hit the router will create a new package for the page
+
+
+// @route       /api/packages/package-register
+// @desc        creates a package for the Professional Page
 const packageCreateFields = [
     { name: "pageID" },
     { name: "title" },
@@ -46,9 +40,9 @@ router.post('/package-register', packageCreateUpload, async (req, res) => {
     }
 })
 
-// @old_route       /api/professional/:id/:id   (:id = pageId)/(:id = packageId)
-// @new_route       /api/packages/:pageHandle/:packageId
-// @desc            will display one of the packages from a page
+
+// @route       /api/packages/:pageHandle/:packageId
+// @desc        displays a SINGLE package from from a selected Page
 router.get('/:pageHandle/:packageId', async (req, res) => {
     try {
         const selectedPage = await Page.findOne({ pageHandle: req.params.pageHandle })
@@ -64,9 +58,8 @@ router.get('/:pageHandle/:packageId', async (req, res) => {
     }
 })
 
-// @old_route       /api/professional/update/:title
-// @new_route       /api/packages/package-price-update
-// @desc        will update the price of a package
+// @route       /api/packages/package-update
+// @desc        updates the package details
 const packageUpdateFields = [
     { name: 'title' },
     { name: 'description' },
@@ -90,6 +83,8 @@ router.put("/package-update", packageUpdateUpload, async (req, res) => {
     }
 })
 
+// @route       /api/packages/update-package-price
+// @desc        update the price of a package
 router.put("/update-package-price", async (req, res) => {
     try {
         const { price, id } = req.body;
@@ -102,9 +97,8 @@ router.put("/update-package-price", async (req, res) => {
     }
 })
 
-// @old_route       /api/professional/:pageId/:packageId
-// @new_route       /api/packages/:pageHandle/:packageId
-// @desc        will purchase a package for an enthusiast 
+// @route       /api/packages/:pageHandle/:packageId
+// @desc        purchases a package from the Page and then creates a Service. Uses Stripe.
 const packagePurchaseFields = [
     { name: 'id' },
     { name: 'receipt_email' },
@@ -146,7 +140,8 @@ router.post('/:pageHandle/:packageId', packagePurchaseUpload, async (req, res) =
     }
 })
 
-
+// @route       api/packages/package-delete
+// @desc        deletes a package from the package model and then the Page
 const packageDeleteFields = [
     { name: 'id' }
 ]
