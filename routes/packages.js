@@ -118,8 +118,6 @@ router.post('/:pageHandle/:packageId', packagePurchaseUpload, async (req, res) =
             packageID: packagePurchased._id,
             DatePurchased: Date.now(),
             quantityRemaining: packagePurchased.numberOfSessions,
-            Sessions: null,
-
         })
         console.log('service created', newService)
         await newService.save()
