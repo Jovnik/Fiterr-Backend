@@ -15,7 +15,7 @@ const ServiceSchema = mongoose.Schema({
     },
     DatePurchased: Date,
     quantityRemaining: Number,
-    Sessions: [{
+    sessions: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'session'
     }],
@@ -26,7 +26,8 @@ const ServiceSchema = mongoose.Schema({
     pageID: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'page'
-    }
+    },
+    receiptUrl: String
 })
 
 module.exports = mongoose.model('service', ServiceSchema);

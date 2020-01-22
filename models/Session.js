@@ -5,11 +5,18 @@ const SessionSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'service'
     },
-    trainerApproval: { type: Boolean, default: false },
+    trainer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'user'
+    },
     time: String,
     date: Date,
     location: String,
     complete: {
+        type: Boolean,
+        default: false
+    },
+    trainerApproval: {
         type: Boolean,
         default: false
     }

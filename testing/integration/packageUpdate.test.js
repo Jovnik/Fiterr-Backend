@@ -45,10 +45,12 @@ const login = async () => {
 test("update package", async () => {
     let cookie = await login();
     response = await request(app)
-        .put("/api/professional/update/Cardio")
+        .put("/api/packages/package-update")
         .set("cookie", cookie)
-        .send({
-            price: 21900
-        })
+        .field("id", "5e244669ad64c538f4a1397c")
+        .field("title", "Weights with MD")
+        .field("description", "Learn how to lift with MD")
+        .field("numberOfSessions", 5)
+        .field("price", 25000)
         .expect(200)
 })

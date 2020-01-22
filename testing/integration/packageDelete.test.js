@@ -42,16 +42,11 @@ const login = async () => {
     return response.headers["set-cookie"];
 };
 
-// @route:      /api/professional/:pageHandle/:serviceId
-// @desc        creates a session for the user
-test("create a session for a service", async () => {
+test("delete a package", async () => {
     let cookie = await login();
     response = await request(app)
-        .post('/api/session/session-create')
+        .delete("/api/packages/package-delete")
         .set("cookie", cookie)
-        .field("serviceID", "5e251d25e74044487bb66330")
-        .field("time", "12:00")
-        .field("date", Date.now())
-        .field("location", "Caufield")
+        .field("id", "5e2626d144912e54d43d9842")
         .expect(200)
 })

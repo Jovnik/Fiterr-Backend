@@ -8,6 +8,7 @@ const AWS = require('aws-sdk');
 require('dotenv').config()
 const mongoose = require('mongoose')
 const Service = require('../models/Service')
+const Session = require('../models/Session')
 
 mongoose.set('useFindAndModify', false);
 
@@ -17,7 +18,13 @@ const storage = multer.memoryStorage()
 const fields = [
     {name: 'image'},
     {name: 'aboutMe'},
-    {name: 'fitnessInterests'} 
+    {name: 'fitnessInterests'},
+    {name: 'time'},
+    {name: 'date'},
+    {name: 'location'},
+    {name: 'trainer'},
+    {name: 'serviceID'},
+    {name: 'id'}
 ]
 
 const upload = multer({ storage: storage }).fields(fields);
@@ -87,7 +94,7 @@ router.post('/create', upload, async (req,res) => {
 // @route       /api/profiles/me
 // @desc        Get my profile thats linked to the logged in user
 router.get('/me', async(req, res) => {
-    const myProfile = await Profile.findOne({ user: req.user._id }).populate('user', ['firstname', 'lastname']);
+    const myProfile = await Profile.findOne({ user: req.user.id }).populate('user', ['firstname', 'lastname']);
     console.log('myProfile is', myProfile);
     res.send(myProfile);
 })
@@ -95,8 +102,8 @@ router.get('/me', async(req, res) => {
 //to return services to dashboard for rendering
 router.get('/services', async(req,res)=>{
     try{
-        const services = await Service.find({enthusiastID: req.user.id})
-        console.log('enthusiast services', services)
+        const services = await Service.find({enthusiastID: req.user.id}).populate('packageID').populate({path: 'Sessions', populate: {path: 'trainer', model: 'user'}})
+        
         res.status(200).send(services)
     }catch(err){
         res.status(400).send(err)
@@ -104,6 +111,10 @@ router.get('/services', async(req,res)=>{
     }
     
 })
+
+
+
+// USE THIS SHIT!!!!
 
 router.get('/other-profile/:username', async(req, res) => {
     const { username } = req.params;
@@ -167,5 +178,20 @@ router.get('/unfollow/:id', async(req, res) => {
     res.json(savedProfile.following);
 }) 
 
+router.get('/clients', async(req,res)=>{
+    try{
+        const clients = []
+        const sessions = await Session.find({trainer: req.user.id}).populate({ path: 'serviceID', populate: { path: 'enthusiastID'}})
+        sessions.forEach((sesh)=>{
+            clients.push(sesh.serviceID.enthusiastID)
+        })
+        res.status(200).send(clients)
+    }
+    catch(err){
+        console.log(err)
+        res.status(400).send(err)
+    }
+
+})
 
 module.exports = router;

@@ -65,8 +65,8 @@ let s3credentials = new AWS.S3({
 
 router.post('/create', upload, async (req, res) => {
     try {
+        const { image } = req.files
         let imageUrl = null;
-        let image = null;
         if (image != null) {
 
             // if there is an image then we generate a unique name 
@@ -97,7 +97,7 @@ router.post('/create', upload, async (req, res) => {
         const currentUser = await User.findOne({ _id: req.user.id })
         if (professionalUser) {
             const { pageOwner, pageTitle, pageAbout } = req.body
-            const { image } = req.files
+            
             let page = await Page.findOne({ newPageHandle });
             if (page) {
                 return res.status(400).send('This Handle is Already Taken')
@@ -155,10 +155,10 @@ router.post('/package-create', upload, async (req, res) => {
         console.log('eherreef')
         console.log('req.bod', req.body)
         console.log('pageID', pageID)
-        const package = new Package(req.body)
-        console.log('package', package)
-        await package.save()
-        let page = await Page.findOneAndUpdate({ _id: pageID }, { $push: { packages: package } })
+        const newPackage = new Package(req.body)
+        console.log('package', newPackage)
+        await newPackage.save()
+        let page = await Page.findOneAndUpdate({ _id: pageID }, { $push: { packages: newPackage } })
         await page.save()
         page = await Page.findOne({ _id: pageID }).populate('packages')
         console.log('page', page)
@@ -169,6 +169,19 @@ router.post('/package-create', upload, async (req, res) => {
     } catch (err) {
         res.status(400).send(err)
         console.log(err)
+    }
+})
+
+router.get('/trainers/:pageID', async(req,res) =>{
+    try{
+        const id = req.params.pageID
+        const page = await Page.findOne({_id: id}).populate('trainers')
+        const trainers = page.trainers
+        res.status(200).send(trainers)
+    }
+    catch(err){
+        console.log(err)
+        res.status(400).send(err)
     }
 })
 module.exports = router;

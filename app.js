@@ -19,7 +19,10 @@ app.use(
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
-    store: new MongoStore({ mongooseConnection: mongoose.connection }),
+    store: new MongoStore({
+      mongooseConnection: mongoose.connection,
+      collection: "cookieSessions"
+    }),
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 14
     }
@@ -44,7 +47,9 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/posts', require('./routes/posts'));
 app.use('/api/professional', require('./routes/professional'));
 app.use('/api/pages', require('./routes/pages'));
-app.use('/api/packages', require('./routes/pages'));
+app.use('/api/packages', require('./routes/packages'));
+app.use('/api/services', require('./routes/services'));
+app.use('/api/session', require('./routes/session'));
 
 module.exports = app
 
