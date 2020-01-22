@@ -38,7 +38,7 @@ const login = async () => {
 test("create a session for a service", async () => {
     let cookie = await login();
     response = await request(app)
-        .post('/api/session/session-create')
+        .post('/api/sessions/session-create')
         .set("cookie", cookie)
         .field("serviceID", "5e27e3bc7ac2f932b16920d6")
         .field("time", "12:00")

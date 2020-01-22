@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const Profile = require('../models/Profile')
-const passport = require('passport')
 const multer = require('multer');
 const AWS = require('aws-sdk');
 require('dotenv').config()
@@ -16,15 +15,15 @@ mongoose.set('useFindAndModify', false);
 const storage = multer.memoryStorage()
 
 const fields = [
-    {name: 'image'},
-    {name: 'aboutMe'},
-    {name: 'fitnessInterests'},
-    {name: 'time'},
-    {name: 'date'},
-    {name: 'location'},
-    {name: 'trainer'},
-    {name: 'serviceID'},
-    {name: 'id'}
+    { name: 'image' },
+    { name: 'aboutMe' },
+    { name: 'fitnessInterests' },
+    { name: 'time' },
+    { name: 'date' },
+    { name: 'location' },
+    { name: 'trainer' },
+    { name: 'serviceID' },
+    { name: 'id' }
 ]
 
 const upload = multer({ storage: storage }).fields(fields);
@@ -37,18 +36,18 @@ let s3credentials = new AWS.S3({
 
 // @route       /api/profiles/create
 // @desc        Create a profile
-router.post('/create', upload, async (req,res) => {
+router.post('/create', upload, async (req, res) => {
     try {
-        const {aboutMe, fitnessInterests} = req.body
+        const { aboutMe, fitnessInterests } = req.body
 
         const { image } = req.files
 
         let imageUrl = null;
         let imagesArr = [];
-        
+
         // check to see if an image was uploaded or not
-        if(image){
-        
+        if (image) {
+
             // if there is an image then we generate a unique name 
             // console.log('here', image);
             const uniqueValue = req.user.id;
@@ -83,17 +82,17 @@ router.post('/create', upload, async (req,res) => {
 
         await profile.save();
         console.log('Profile:', profile);
-        await User.findByIdAndUpdate({_id: req.user.id}, {profile: profile.id})  //update the user so that they now have the profile field
+        await User.findByIdAndUpdate({ _id: req.user.id }, { profile: profile.id })  //update the user so that they now have the profile field
         return res.send(profile);
 
-    } catch(err) {
+    } catch (err) {
         console.log(err)
-    } 
+    }
 })
 
 // @route       /api/profiles/me
 // @desc        Get my profile thats linked to the logged in user
-router.get('/me', async(req, res) => {
+router.get('/me', async (req, res) => {
     const myProfile = await Profile.findOne({ user: req.user.id }).populate('user', ['firstname', 'lastname']);
     console.log('myProfile is', myProfile);
     res.send(myProfile);
@@ -103,20 +102,19 @@ router.get('/me', async(req, res) => {
 router.get('/services', async(req,res)=>{
     try{
         const services = await Service.find({enthusiastID: req.user.id}).populate([{path: 'packageID'}, {path: 'sessions', populate: {path: 'trainer', model: 'user'}}])
-        
         res.status(200).send(services)
-    }catch(err){
+    } catch (err) {
         res.status(400).send(err)
         console.log(err)
     }
-    
+
 })
 
 
 
 // USE THIS SHIT!!!!
 
-router.get('/other-profile/:username', async(req, res) => {
+router.get('/other-profile/:username', async (req, res) => {
     const { username } = req.params;
     const otherUser = await User.findOne({ username });
     const otherProfile = await Profile.findOne({ user: otherUser._id }).populate('user', ['firstname', 'lastname', 'username']);
@@ -126,16 +124,16 @@ router.get('/other-profile/:username', async(req, res) => {
 
 // @route       /api/profiles
 // @desc        Get a profile
-router.get('/', async (req,res)=> {
+router.get('/', async (req, res) => {
     const id = req.query.id;
-    const findProfile = await Profile.findOne({user: id}).populate('user', ['firstname', 'lastname']);
+    const findProfile = await Profile.findOne({ user: id }).populate('user', ['firstname', 'lastname']);
     // console.log('Profile found', findProfile);
     res.send(findProfile)
 })
 
 // @route       /api/profiles/follow/:id
 // @desc        Put our profile id in the following profiles follower field, and put the following id in our profiles following field
-router.get('/follow/:id', async(req, res) => {
+router.get('/follow/:id', async (req, res) => {
     const followId = req.params.id;     // this is the otherUser's profile id
 
     // put their id in our following array
@@ -145,7 +143,7 @@ router.get('/follow/:id', async(req, res) => {
     console.log('*', mySavedProfile.following);
 
     // put our id in their followers array
-    const otherProfile = await Profile.findOne({user: followId});
+    const otherProfile = await Profile.findOne({ user: followId });
     otherProfile.followers.push(req.user._id);
     const savedOtherProfile = await otherProfile.save();
     console.log('**the other profile', savedOtherProfile.followers);
@@ -155,7 +153,7 @@ router.get('/follow/:id', async(req, res) => {
 
 // @route       /api/profiles/unfollow/:id
 // @desc        Remove our profile id from the following profiles follower field and remove the following id from our profiles following field
-router.get('/unfollow/:id', async(req, res) => {
+router.get('/unfollow/:id', async (req, res) => {
     const followId = req.params.id;
 
     // find my profile and remove the followId from the following array
@@ -176,18 +174,18 @@ router.get('/unfollow/:id', async(req, res) => {
 
 
     res.json(savedProfile.following);
-}) 
+})
 
-router.get('/clients', async(req,res)=>{
-    try{
+router.get('/clients', async (req, res) => {
+    try {
         const clients = []
-        const sessions = await Session.find({trainer: req.user.id}).populate({ path: 'serviceID', populate: { path: 'enthusiastID'}})
-        sessions.forEach((sesh)=>{
+        const sessions = await Session.find({ trainer: req.user.id }).populate({ path: 'serviceID', populate: { path: 'enthusiastID' } })
+        sessions.forEach((sesh) => {
             clients.push(sesh.serviceID.enthusiastID)
         })
         res.status(200).send(clients)
     }
-    catch(err){
+    catch (err) {
         console.log(err)
         res.status(400).send(err)
     }
