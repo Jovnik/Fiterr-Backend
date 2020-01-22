@@ -8,13 +8,17 @@ require('dotenv').config()
 const mongoose = require('mongoose')
 const Service = require('../models/Service')
 const Session = require('../models/Session')
+const storage = multer.memoryStorage()
 
 mongoose.set('useFindAndModify', false);
 
-// we say that we're using in memory storage for multer
-const storage = multer.memoryStorage()
 
-const fields = [
+
+
+
+// @route       /api/profiles/create
+// @desc        Create a profile
+const profileFields = [
     { name: 'image' },
     { name: 'aboutMe' },
     { name: 'fitnessInterests' },
@@ -25,18 +29,12 @@ const fields = [
     { name: 'serviceID' },
     { name: 'id' }
 ]
-
-const upload = multer({ storage: storage }).fields(fields);
-
+const profileUpload = multer({ storage: storage }).fields(profileFields);
 let s3credentials = new AWS.S3({
     accessKeyId: process.env.ACCESSKEYID,
     secretAccessKey: process.env.SECRETACCESSKEY
 });
-
-
-// @route       /api/profiles/create
-// @desc        Create a profile
-router.post('/create', upload, async (req, res) => {
+router.post('/create', profileUpload, async (req, res) => {
     try {
         const { aboutMe, fitnessInterests } = req.body
 
@@ -49,7 +47,6 @@ router.post('/create', upload, async (req, res) => {
         if (image) {
 
             // if there is an image then we generate a unique name 
-            // console.log('here', image);
             const uniqueValue = req.user.id;
             const uniqueTimeValue = (Date.now()).toString();
             const name = image[0].originalname + image[0].size + uniqueValue + uniqueTimeValue;
@@ -68,7 +65,7 @@ router.post('/create', upload, async (req, res) => {
             imagesArr = [imageUrl];
 
         } else {
-            console.log('There was no image uploaded');
+            res.send("no image")
         }
 
         // we create the new profile here - it will have the correct link if an image was detected in the upload
@@ -81,35 +78,34 @@ router.post('/create', upload, async (req, res) => {
         });
 
         await profile.save();
-        console.log('Profile:', profile);
         await User.findByIdAndUpdate({ _id: req.user.id }, { profile: profile.id })  //update the user so that they now have the profile field
-        return res.send(profile);
-
+        return res.status(200).send(profile);
     } catch (err) {
-        console.log(err)
+        res.status(500).send(err)
     }
 })
 
 // @route       /api/profiles/me
 // @desc        Get my profile thats linked to the logged in user
 router.get('/me', async (req, res) => {
-    const myProfile = await Profile.findOne({ user: req.user.id }).populate('user', ['firstname', 'lastname']);
-    console.log('myProfile is', myProfile);
-    res.send(myProfile);
-})
+    try {
+        const myProfile = await Profile.findOne({ user: req.user.id }).populate('user', ['firstname', 'lastname']);
+        res.status(200).send(myProfile);
+    } catch (err) {
+        res.status(500).send(err)
+    }
+});
 
-//to return services to dashboard for rendering
+// @route   /api/profiles/services
+// @desc    to return services to dashboard for rendering
 router.get('/services', async (req, res) => {
     try {
         const services = await Service.find({ enthusiastID: req.user.id }).populate('packageID').populate({ path: 'Sessions', populate: { path: 'trainer', model: 'user' } })
-
         res.status(200).send(services)
     } catch (err) {
-        res.status(400).send(err)
-        console.log(err)
+        res.status(500).send(err)
     }
-
-})
+});
 
 
 
