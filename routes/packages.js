@@ -31,7 +31,10 @@ router.post('/package-register', async (req, res) => {
             price: price
         })
         await newPackage.save()
-        res.status(200).send(newPackage)
+        let updatedPage = await Page.findOneAndUpdate({ _id: pageID }, { $push: { packages: newPackage } })
+        await updatedPage.save()
+        updatedPage = await Page.findOne({ _id: pageID }).populate('packages')
+        res.status(200).send(updatedPage)
     } catch (err) {
         console.log('Error', err.message);
         res.status(500).send(err)
@@ -75,6 +78,18 @@ router.put("/package-update", packageUpdateUpload, async (req, res) => {
         updatedPackage.price = price
         await updatedPackage.save()
         console.log('updatedpackage', updatedPackage)
+        res.status(200).send(updatedPackage)
+    } catch (err) {
+        res.status(500).send(err.message)
+    }
+})
+
+router.put("/update-package-price", async (req, res) => {
+    try {
+        const { price, id } = req.body;
+        const updatedPackage = await Packages.findOneAndUpdate({ _id: id }, {
+            price: price
+        })
         res.status(200).send(updatedPackage)
     } catch (err) {
         res.status(500).send(err.message)
