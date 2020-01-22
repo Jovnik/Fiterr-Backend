@@ -66,6 +66,73 @@ router.get('/:pageId', async (req, res) => {
 //             quantityRemaining: packagePurchased.numberOfSessions,
 //             Sessions: null,
 
+
+router.post('/:pageHandle/:packageId', upload,async (req, res) => {
+    // console.log(req.user);
+    try {
+        const selectedPage = await Page.findOne({ pageHandle: req.params.pageHandle })
+        const packagePurchased = await Packages.findOne({ _id: req.params.packageId })
+        const amount = packagePurchased.price
+        console.log('package purchased', packagePurchased);
+        console.log('selected page', selectedPage);
+        const customer = await stripe.customers.create({
+            email: req.body.receipt_email,
+            source: req.body.source
+        })
+        const newCharge = await stripe.charges.create({
+            amount,
+            description: packagePurchased.description,
+            currency: 'aud',
+            customer: customer.id
+        })
+        console.log('newCHarge', newCharge)
+        const newService = new Service({
+            enthusiastID: req.user.id,
+            professionalID: selectedPage.pageOwner,
+            pageID: packagePurchased.pageID,
+            packageID: packagePurchased._id,
+            DatePurchased: Date.now(),
+            quantityRemaining: packagePurchased.numberOfSessions
+            
+        })
+        console.log('service created', newService)
+        await newService.save()
+        res.status(200).send(newCharge)
+    } catch (err) {
+        console.log('Error', err);
+        res.status(500).send(err)
+    }
+})
+
+const serviceFields = [
+    { name: "serviceID" },
+    { name: "time" },
+    { name: "date" },
+    { name: "location" }
+]
+const serviceUpload = multer({ storage: storage }).fields(serviceFields)
+router.post('/session-create', serviceUpload, async (req, res) => {
+    try {
+        console.log(req.body);
+        const { time, date, location, serviceID } = req.body;
+        const newSession = new Session({
+            serviceID: serviceID,
+            time: time,
+            date: date,
+            location: location
+        })
+        const currentService = await Service.findOne({ _id: req.body.serviceID })
+        currentService.Sessions = newSession
+        await currentService.save()
+        console.log(currentService.Sessions);
+        await newSession.save()
+        res.status(200).send(newSession);
+    } catch (err) {
+        console.log('error', err);
+        res.status(500).send(err)
+    }
+})
+
 //         })
 //         console.log('service created', newService)
 //         await newService.save()
@@ -75,5 +142,6 @@ router.get('/:pageId', async (req, res) => {
 //         res.status(500).send(err)
 //     }
 // })
+
 
 module.exports = router;

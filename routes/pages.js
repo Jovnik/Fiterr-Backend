@@ -171,4 +171,17 @@ router.post('/package-create', upload, async (req, res) => {
         console.log(err)
     }
 })
+
+router.get('/trainers/:pageID', async(req,res) =>{
+    try{
+        const id = req.params.pageID
+        const page = await Page.findOne({_id: id}).populate('trainers')
+        const trainers = page.trainers
+        res.status(200).send(trainers)
+    }
+    catch(err){
+        console.log(err)
+        res.status(400).send(err)
+    }
+})
 module.exports = router;
