@@ -125,15 +125,8 @@ const upload = multer({ storage: storage }).fields(fields)
 router.post("/professional-activate", upload, async (req, res) => {
 
   const { phoneNumber } = req.body;
-  console.log(req.body)
-  console.log(phoneNumber)
   const { userID } = req.user.id;
-
-  // update user by adding phone number and then swapping boolean
-  // add professional ID to User Model
-
   const user = await User.findOne({ _id: req.user.id })
-  console.log(user);
   try {
     let errors = [];
     let phoneNumberArr = [];
@@ -142,11 +135,10 @@ router.post("/professional-activate", upload, async (req, res) => {
       errors.push({ msg: "Phone Number must be 10 lengths long" })
     }
     if (phoneNumberArr[0] != "0" && phoneNumber[1] != "4") {
-      errors.push({ msg: "Please enter an Australian Number" })
+      errors.push({ msg: "Please enter an Australian Number starting with 04" })
     }
     if (errors.length != 0) {
-      console.log(errors);
-      res.status(500).send("NOTHING IS WELL")
+      res.status(500).send(errors)
     }
     else {
       user.phoneNumber = phoneNumber;
@@ -156,12 +148,10 @@ router.post("/professional-activate", upload, async (req, res) => {
       await professional.save()
       user.professional = professional._id
       await user.save()
-      res.status(200).send('Professional Accepted')
+      res.status(200).send(user)
     }
-
   } catch (err) {
-    console.log(err)
-    res.status(400).send("Server error");
+    res.status(400).send(err.message);
   }
 
 

@@ -11,35 +11,29 @@ beforeEach(() => {
         dbOptions,
         err => {
             if (err) {
-                // console.log("not connected");
+                console.log(err);
             } else {
-                // console.log("connected");
             }
         }
     );
 });
 
-// @desc: logout function for future tests.
-const logout = async () => {
-    response = await request(app)
-        .post("/api/users/logout")
-};
-
 afterEach(() => {
-    logout()
     mongoose.connection.close();
 });
 
-// @route: /api/users/register
-// @desc: Registration test: Testing that a user can login through the backend API.
+// @route:      /api/users/register
+// @desc:       Registration test: Testing that a user can login through the backend API.
+
+// @NOTES:      Test Passed!
 test("registration test", async () => {
     const response = await request(app)
         .post("/api/users/register")
         .send({
-            firstname: "Craig version 3",
-            lastname: "Stanley",
-            email: "craig.stanleyV13@gmail.com",
-            username: "craig.stanleyV5",
+            firstname: "M",
+            lastname: "D",
+            email: "md@gmail.com",
+            username: "md",
             password: "asdfgh",
             gender: "Male",
             dob: new Date()

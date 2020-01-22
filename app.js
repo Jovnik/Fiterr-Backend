@@ -16,7 +16,7 @@ app.use(express.json());
 // express session 
 app.use(
   session({
-    secret: 'sessionsecret',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
     store: new MongoStore({
@@ -31,7 +31,7 @@ app.use(
 
 //cors 
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: process.env.CORS_URL,
   credentials: true
 }))
 
@@ -45,7 +45,6 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/profiles', require('./routes/profiles'));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/posts', require('./routes/posts'));
-app.use('/api/professional', require('./routes/professional'));
 app.use('/api/pages', require('./routes/pages'));
 app.use('/api/packages', require('./routes/packages'));
 app.use('/api/services', require('./routes/services'));
