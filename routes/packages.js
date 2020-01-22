@@ -106,7 +106,6 @@ router.put("/update-package-price", async (req, res) => {
 // @new_route       /api/packages/:pageHandle/:packageId
 // @desc        will purchase a package for an enthusiast 
 const packagePurchaseFields = [
-    { name: 'price' },
     { name: 'id' },
     { name: 'receipt_email' },
     { name: 'amount' },
@@ -114,10 +113,10 @@ const packagePurchaseFields = [
 ]
 const packagePurchaseUpload = multer({ storage: storage }).fields(packagePurchaseFields)
 router.post('/:pageHandle/:packageId', packagePurchaseUpload, async (req, res) => {
-    console.log(req.user);
     try {
+        console.log(req.body)
         const selectedPage = await Page.findOne({ pageHandle: req.params.pageHandle })
-        const packagePurchased = await Packages.findOne({ title: req.params.packageId })
+        const packagePurchased = await Packages.findOne({ _id: req.params.packageId })
         const amount = packagePurchased.price
         const customer = await stripe.customers.create({
             email: req.body.receipt_email,
@@ -142,6 +141,7 @@ router.post('/:pageHandle/:packageId', packagePurchaseUpload, async (req, res) =
         await newService.save()
         res.status(200).send(newCharge)
     } catch (err) {
+        console.log(err)
         res.status(500).send(err)
     }
 })
