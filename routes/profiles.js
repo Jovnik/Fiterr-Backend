@@ -190,5 +190,21 @@ router.get('/clear/:id', async(req, res) => {
     res.send('success');
 })
 
+router.get('/clients', async(req,res)=>{
+    try{
+        const clients = []
+        const sessions = await Session.find({trainer: req.user.id}).populate({ path: 'serviceID', populate: { path: 'enthusiastID'}})
+        sessions.forEach((sesh)=>{
+            clients.push(sesh.serviceID.enthusiastID)
+        })
+        res.status(200).send(clients)
+    }
+    catch(err){
+        console.log(err)
+        res.status(400).send(err)
+    }
+
+})
+
 
 module.exports = router;

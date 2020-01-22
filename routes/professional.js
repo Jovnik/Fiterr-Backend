@@ -67,7 +67,7 @@ router.get('/:pageId', async (req, res) => {
 //             Sessions: null,
 
 
-router.post('/:pageHandle/:packageId', upload,async (req, res) => {
+router.post('/:pageHandle/:packageId', async (req, res) => {
     // console.log(req.user);
     try {
         const selectedPage = await Page.findOne({ pageHandle: req.params.pageHandle })
@@ -142,6 +142,8 @@ router.post('/session-create', serviceUpload, async (req, res) => {
 //         res.status(500).send(err)
 //     }
 // })
+
+
 
 
 module.exports = router;
