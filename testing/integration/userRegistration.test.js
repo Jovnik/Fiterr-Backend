@@ -33,18 +33,19 @@ afterEach(() => {
 // @route: /api/users/register
 // @desc: Registration test: Testing that a user can login through the backend API.
 test("registration test", async () => {
-    await request(app)
+    const response = await request(app)
         .post("/api/users/register")
         .send({
-            firstname: "j",
-            lastname: "j",
-            email: "jj@email.com",
-            username: "jj",
+            firstname: "Craig version 3",
+            lastname: "Stanley",
+            email: "craig.stanleyV13@gmail.com",
+            username: "craig.stanleyV5",
             password: "asdfgh",
-            gender: "Female",
+            gender: "Male",
             dob: new Date()
         })
-        .expect(200, body => {
-            console.log(body);
-        });
+        .expect(200);
+    expect(response.text).toBeTruthy()
+    const result = JSON.parse(response.text)
+    expect(result.isProfessional).toBe(false)
 });

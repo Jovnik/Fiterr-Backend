@@ -19,7 +19,10 @@ app.use(
     secret: 'sessionsecret',
     resave: false,
     saveUninitialized: true,
-    store: new MongoStore({ mongooseConnection: mongoose.connection }),
+    store: new MongoStore({
+      mongooseConnection: mongoose.connection,
+      collection: "cookieSessions"
+    }),
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 14
     }
