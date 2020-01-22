@@ -178,17 +178,20 @@ router.get('/unfollow/:id', async(req, res) => {
     res.json(savedProfile.following);
 }) 
 
-// POSTMAN ROUTE ONLY
-// @route       /api/profiles/clear/:id
-// @desc        clear all following and follower ids from the profile
-router.get('/clear/:id', async(req, res) => {
-    console.log('We have the Profile ID: ', req.params.id);
+router.get('/clients', async(req,res)=>{
+    try{
+        const clients = []
+        const sessions = await Session.find({trainer: req.user.id}).populate({ path: 'serviceID', populate: { path: 'enthusiastID'}})
+        sessions.forEach((sesh)=>{
+            clients.push(sesh.serviceID.enthusiastID)
+        })
+        res.status(200).send(clients)
+    }
+    catch(err){
+        console.log(err)
+        res.status(400).send(err)
+    }
 
-    const profile = await Profile.findOneAndUpdate({_id: req.params.id}, { following: [], followers: [] }, { new: true });
-    console.log('Profile is now:', profile);
-
-    res.send('success');
 })
-
 
 module.exports = router;

@@ -61,8 +61,8 @@ let s3credentials = new AWS.S3({
 
 router.post('/create', upload, async (req, res) => {
     try {
+        const { image } = req.files
         let imageUrl = null;
-        let image = null;
         if (image != null) {
 
             // if there is an image then we generate a unique name 
@@ -92,7 +92,7 @@ router.post('/create', upload, async (req, res) => {
         const currentUser = await User.findOne({ _id: req.user.id })
         if (professionalUser) {
             const { pageOwner, pageTitle, pageAbout } = req.body
-            const { image } = req.files
+            
             let page = await Page.findOne({ newPageHandle });
             if (page) {
                 return res.status(400).send('This Handle is Already Taken')
