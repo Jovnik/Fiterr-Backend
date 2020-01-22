@@ -20,6 +20,26 @@ const s3credentials = new AWS.S3({
   secretAccessKey: process.env.SECRETACCESSKEY
 });
 
+
+router.get('/page-posts/:id', async(req, res) => {
+
+  const { id } = req.params;
+
+  const posts = await Post.find({ postOwnerPage: id}).sort({ date: -1 })
+  .populate([
+    {path: 'comments', 
+      populate: [
+       { path: 'user', select: 'firstname lastname', populate: {path: 'profile', select: 'displayImage'} }, 
+       { path: 'replies', populate: {path: 'user', select: 'firstname lastname', populate: {path: 'profile', select: 'displayImage'} } }
+      ] 
+    },
+    {path: 'postOwnerUser', select: 'firstname lastname', populate: {path: 'profile', select: 'displayImage'}}
+  ])
+
+  res.json(posts);
+
+})
+
 // @route       /api/posts/newsfeed-posts
 // @desc        Get the posts (from those you are following) that will make up the newsfeed
 router.get('/newsfeed', async (req, res) => {
@@ -74,40 +94,49 @@ router.get('/:id', async (req, res) => {
 // @route       /api/posts/create-post
 // @desc        deletes a single post
 router.post('/create-post', upload, async (req, res) => {
-  try {
-    const { postDescription } = req.body;
-    const { image } = req.files
 
-    let imageUrl = null;
+    try {
+        const { postDescription, postOwnerPage } = req.body;
+        const { image } = req.files
 
-    if (image) {
-      const uniqueTimeValue = (Date.now()).toString();
-      const name = image[0].originalname + image[0].size + req.user._id + uniqueTimeValue;
+        console.log('HERE', postDescription, image, postOwnerPage);
 
-      const fileParams = {
-        Bucket: process.env.BUCKET,
-        Body: image[0].buffer,
-        Key: name,
-        ACL: 'public-read',
-        ContentType: image[0].mimetype
-      }
+        let imageUrl = null;
 
-      const data = await s3credentials.upload(fileParams).promise();
-      imageUrl = data.Location;
-    }
+        if(image){
+            const uniqueTimeValue = (Date.now()).toString();
+            const name = image[0].originalname + image[0].size + req.user._id + uniqueTimeValue;
 
-    const newPost = new Post({
-      postOwnerUser: req.user._id,
-      content: postDescription,
-      image: imageUrl
-    });
-    const { _id } = await newPost.save();
-    const savedPost = await Post.findById(_id).populate({ path: 'postOwnerUser', select: 'firstname lastname', populate: { path: 'profile', select: 'displayImage' } })
+            const fileParams = {
+                Bucket: process.env.BUCKET,
+                Body: image[0].buffer,
+                Key: name,
+                ACL: 'public-read',
+                ContentType: image[0].mimetype
+            }
 
-    res.status(200).send(savedPost);
-  } catch (err) {
-    res.status(500).send(err)
-  };
+            const data = await s3credentials.upload(fileParams).promise();
+            imageUrl = data.Location;
+            console.log(imageUrl);
+        }
+
+        const newPost = new Post({
+            postOwnerUser: req.user._id,
+            postOwnerPage: postOwnerPage,
+            content: postDescription,
+            image: imageUrl
+        });
+        const { _id } = await newPost.save();
+        const savedPost = await Post.findById(_id).populate({path: 'postOwnerUser', select: 'firstname lastname', populate: {path: 'profile', select: 'displayImage'}})
+
+        console.log('savedPost', savedPost)
+
+        res.send(savedPost);
+
+    } catch (err) {
+        console.error('ERROR', err.message);
+        res.status(500).send(err)
+    };
 });
 
 
