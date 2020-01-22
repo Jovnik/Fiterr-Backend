@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 
-const User = require('../models/User');
 const Profile = require('../models/Profile')
 const Post = require('../models/Post');
 const Comment = require('../models/Comment');
@@ -31,14 +30,9 @@ const s3credentials = new AWS.S3({
 // @desc        Get the posts (from those you are following) that will make up the newsfeed
 router.get('/newsfeed', async(req, res) => {
 
-  // need to get the user id's of the users im following from my profile
-  // if we get the user ids we can just find the posts because posts are also linked by userIDs with postOwnerUser
-
   const profile = await Profile.findOne({user: req.user._id});  // this is your profile
-  // console.log(profile);
-  const following = profile.following;  // following field contains PROFILE ids
+  const following = profile.following;  // following field contains USER ids
   following.push(req.user._id);
-  // console.log(following);
 
   let newsfeedPosts = [];
 
@@ -64,7 +58,6 @@ router.get('/newsfeed', async(req, res) => {
 })
 
 
-// THIS IS WHERE THAT BULLSHIT ASS ERROR IS AT
 router.get('/:id', async(req, res) => {
   console.log('THE PARAM', req.params.id);
   try {
@@ -86,7 +79,7 @@ router.get('/:id', async(req, res) => {
     res.json(posts);
     
   } catch (err) {
-    console.log('ERROR1', err);
+    console.log('ERROR', err);
     res.status(500).send('Server Error');
   }
 })
@@ -95,7 +88,6 @@ router.get('/:id', async(req, res) => {
 
 // @route       /api/posts/create-post
 // @desc        Delete a single post
-// WORKS
 router.post('/create-post', upload, async (req, res) => {
     try {
         const { postDescription } = req.body;
@@ -133,7 +125,7 @@ router.post('/create-post', upload, async (req, res) => {
         res.send(savedPost);
 
     } catch (err) {
-        console.error('Error 2:', err.message);
+        console.error('ERROR', err.message);
         res.status(500).send(err)
     };
 });
@@ -146,7 +138,6 @@ router.delete('/:id', async(req, res) => {
     try {
       
       const post = await Post.findById(req.params.id);
-      // console.log('This is the post', post);
 
       // Check you are the owning user
       if (!post.postOwnerUser.equals(req.user._id)) {
@@ -158,7 +149,7 @@ router.delete('/:id', async(req, res) => {
       res.json({ msg: 'Post removed' });
       
     } catch (err) {
-      console.error('ERROR 3', err.message);
+      console.error('ERROR', err.message);
       res.status(500).send('Server Error');
     }
 })
@@ -184,7 +175,7 @@ router.put('/like/:id', async (req, res) => {
   
       res.json(post.likes);
     } catch (err) {
-      console.error(err.message);
+      console.error('ERROR', err.message);
       res.status(500).send('Server Error');
     }
 });
@@ -202,9 +193,7 @@ router.put('/unlike/:id', async (req, res) => {
     }
 
     // Get remove index
-    const removeIndex = post.likes
-      .map(like => like.user.toString())
-      .indexOf(req.user.id);
+    const removeIndex = post.likes.map(like => like.user.toString()).indexOf(req.user.id);
 
     post.likes.splice(removeIndex, 1);
 
@@ -251,11 +240,6 @@ router.post('/comment/:id', async (req, res) => {
       post.comments.unshift(commentId);
       await post.save()
 
-      // as a result of not having big ass populate statements, we need to update the posts on the reducer with a bit of logic
-
-      // not sending the updated posts comments anymore
-      // going to directly send the comment and shift it into tthe current posts state 
-
       res.json(comment);
 
     } catch (err) {
@@ -272,10 +256,8 @@ router.delete('/remove-comment/:postId/:commentId', async(req, res) => {
   try {
     const { postId, commentId } = req.params;
 
-    // const comment = await Comment.deleteOne(commentId);
     const comment = await Comment.findById(commentId);
     await comment.remove();
-    // console.log(comment);
 
     const post = await Post.findById(postId);
     const removeIndex = post.comments.findIndex(comment => comment._id.equals(commentId));
@@ -285,8 +267,7 @@ router.delete('/remove-comment/:postId/:commentId', async(req, res) => {
     res.json({ msg: 'post successfully removed'});
 
   } catch (err) {
-    console.log('THE ERROR HAS ARRIVED');
-    console.log(err);
+    console.log('ERROR', err);
   }
 })
 
@@ -338,7 +319,6 @@ router.put('/unlike-comment/:postId/:commentId', async(req, res) => {
       {path: 'replies', populate: {path: 'user', select: 'firstname lastname', populate: {path: 'profile', select: 'displayImage'}}}
     ]);
     
-    // console.log(comments);
     res.json(comments);
 
   } catch (err) {
