@@ -18,25 +18,30 @@ const { check, validationResult } = require('express-validator');
 // @old_route       /api/professional/package-register
 // @new_route       /api/packages/package-register
 // @desc        when hit the router will create a new package for the page
-router.post('/package-register', async (req, res) => {
-    const { title, description, numSessions, price } = req.body
-    console.log(req.user.pageOwned);
-
+const packageCreateFields = [
+    { name: "pageID" },
+    { name: "title" },
+    { name: "description" },
+    { name: "numberOfSessions" },
+    { name: "price" }
+]
+const packageCreateUpload = multer({ storage: storage }).fields(packageCreateFields)
+router.post('/package-register', packageCreateUpload, async (req, res) => {
+    const { pageID, title, description, numberOfSessions, price } = req.body
     try {
         const newPackage = new Packages({
-            pageID: req.user.pageOwned,
+            pageID: pageID,
             title: title,
             description: description,
-            numberOfSessions: numSessions,
+            numberOfSessions: numberOfSessions,
             price: price
         })
         await newPackage.save()
-        let updatedPage = await Page.findOneAndUpdate({ _id: pageID }, { $push: { packages: newPackage } })
+        let updatedPage = await Page.findOneAndUpdate({ _id: req.user.pageOwned }, { $push: { packages: newPackage } })
         await updatedPage.save()
-        updatedPage = await Page.findOne({ _id: pageID }).populate('packages')
+        updatedPage = await Page.findOne({ _id: req.user.pageOwned }).populate('packages')
         res.status(200).send(updatedPage)
     } catch (err) {
-        console.log('Error', err.message);
         res.status(500).send(err)
     }
 })
@@ -47,10 +52,12 @@ router.post('/package-register', async (req, res) => {
 router.get('/:pageHandle/:packageId', async (req, res) => {
     try {
         const selectedPage = await Page.findOne({ pageHandle: req.params.pageHandle })
-        const selectedPackage = await Packages.findOne({ _id: req.params.packageId })
-        console.log(selectedPage);
-        console.log(selectedPackage);
-        res.status(200).send(selectedPackage)
+        const selectedPackage = await Packages.findOne({ title: req.params.packageId })
+        if (selectedPage.id != selectedPackage.pageID) {
+            res.status(500).send("package isn't owned by this page")
+        } else {
+            res.status(200).send(selectedPackage)
+        }
     } catch (err) {
         console.log('Error', err.message);
         res.status(500).send(err)
@@ -77,10 +84,9 @@ router.put("/package-update", packageUpdateUpload, async (req, res) => {
         updatedPackage.numberOfSessions = numberOfSessions
         updatedPackage.price = price
         await updatedPackage.save()
-        console.log('updatedpackage', updatedPackage)
         res.status(200).send(updatedPackage)
     } catch (err) {
-        res.status(500).send(err.message)
+        res.status(500).send(err)
     }
 })
 
@@ -92,7 +98,7 @@ router.put("/update-package-price", async (req, res) => {
         })
         res.status(200).send(updatedPackage)
     } catch (err) {
-        res.status(500).send(err.message)
+        res.status(500).send(err)
     }
 })
 
@@ -111,10 +117,8 @@ router.post('/:pageHandle/:packageId', packagePurchaseUpload, async (req, res) =
     console.log(req.user);
     try {
         const selectedPage = await Page.findOne({ pageHandle: req.params.pageHandle })
-        const packagePurchased = await Packages.findOne({ _id: req.params.packageId })
+        const packagePurchased = await Packages.findOne({ title: req.params.packageId })
         const amount = packagePurchased.price
-        console.log('package purchased', packagePurchased);
-        console.log('selected page', selectedPage);
         const customer = await stripe.customers.create({
             email: req.body.receipt_email,
             source: req.body.source
@@ -125,7 +129,6 @@ router.post('/:pageHandle/:packageId', packagePurchaseUpload, async (req, res) =
             currency: 'aud',
             customer: customer.id
         })
-        console.log('newCharge', newCharge)
         const newService = new Service({
             enthusiastID: req.user.id,
             professionalID: selectedPage.pageOwner,
@@ -136,11 +139,9 @@ router.post('/:pageHandle/:packageId', packagePurchaseUpload, async (req, res) =
             receiptUrl: newCharge.receipt_url
 
         })
-        console.log('service created', newService)
         await newService.save()
         res.status(200).send(newCharge)
     } catch (err) {
-        console.log('Error', err);
         res.status(500).send(err)
     }
 })
@@ -154,10 +155,14 @@ router.delete('/package-delete', packageDeleteUpload, async (req, res) => {
     try {
         const { id } = req.body
         const selectedPackage = await Packages.findOneAndDelete({ _id: id })
-        selectedPackage.save()
+        const selectedPageID = selectedPackage.pageID
+        const selectedPage = await Page.findOne({ _id: selectedPageID })
+        const stringIds = selectedPage.packages.map((pak) => String(pak))
+        const filteredPackages = stringIds.filter(packageDelete => packageDelete !== id)
+        selectedPage.packages = filteredPackages
+        selectedPage.save()
         res.status(200).end()
     } catch (err) {
-        console.log('Error', err);
         res.status(500).send(err)
     }
 })

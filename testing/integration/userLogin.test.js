@@ -11,22 +11,14 @@ beforeEach(() => {
         dbOptions,
         err => {
             if (err) {
-                // console.log("not connected");
+                console.log(err);
             } else {
-                // console.log("connected");
             }
         }
     );
 });
 
-// @desc: logout function for future tests.
-const logout = async () => {
-    response = await request(app)
-        .post("/api/users/logout")
-};
-
 afterEach(() => {
-    logout()
     mongoose.connection.close();
 });
 
