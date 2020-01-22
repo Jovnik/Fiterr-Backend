@@ -48,7 +48,7 @@ app.use('/api/posts', require('./routes/posts'));
 app.use('/api/pages', require('./routes/pages'));
 app.use('/api/packages', require('./routes/packages'));
 app.use('/api/services', require('./routes/services'));
-app.use('/api/session', require('./routes/session'));
+app.use('/api/sessions', require('./routes/sessions'));
 
 module.exports = app
 

@@ -1,20 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
-const Profile = require('../models/Profile')
-const Packages = require('../models/Packages')
-const Page = require('../models/Page')
 const Service = require('../models/Service')
-const passport = require('passport')
 const Session = require('../models/Session')
 const multer = require('multer');
 const storage = multer.memoryStorage();
-const AWS = require('aws-sdk');
-const stripe = require('stripe')(process.env.SECRETSTRIPE);
 require('dotenv').config()
-const mongoose = require('mongoose')
-const { check, validationResult } = require('express-validator');
 
+
+// @route:      /api/sessions/session-create
+// @desc        creates a session for the service of a user
 const sessionFields = [
     { name: "serviceID" },
     { name: "time" },
@@ -43,34 +37,35 @@ router.post('/session-create', sessionUpload, async (req, res) => {
         res.status(200).send(services)
     }
     catch (err) {
-        console.log(err)
-        res.status(400).send(err)
+        res.status(500).send(err)
     }
+});
 
-})
-
+// @route       /api/sessions/trainer-pending-sessions  
+// @desc        Any sessions that the user has created gets sent to the trainer to approve
 router.get('/trainer-pending-sessions', async (req, res) => {
     try {
         const sessions = await Session.find({ trainer: req.user._id, trainerApproval: false })
-        console.log(sessions)
         res.status(200).send(sessions)
     }
     catch (err) {
-        console.log(err)
-        res.status(400).send(err)
+        res.status(500).send(err)
     }
 })
 
+// @route       /api/sessions/trainer-upcoming-sessions
+// @desc        Once approved sessions will GET here
 router.get('/trainer-upcoming-sessions', async (req, res) => {
     try {
         const sessions = await Session.find({ trainer: req.user._id, trainerApproval: true })
         res.status(200).send(sessions)
     } catch (err) {
-        console.log(err)
-        res.status(400).send(err)
+        res.status(500).send(err)
     }
-})
+});
 
+// @route       /api/sessions/trainer-approval
+// @desc        Trainer approves the session and it changes the data in the document
 router.put('/trainer-approval', sessionUpload, async (req, res) => {
     try {
         const { id } = req.body
@@ -78,8 +73,7 @@ router.put('/trainer-approval', sessionUpload, async (req, res) => {
         res.status(200).send(updateSession)
     }
     catch (err) {
-        console.log(err)
-        res.status(400).send(err)
+        res.status(500).send(err)
     }
 })
 
