@@ -16,7 +16,7 @@ app.use(express.json());
 // express session 
 app.use(
   session({
-    secret: 'sessionsecret',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
     store: new MongoStore({ mongooseConnection: mongoose.connection }),
@@ -28,7 +28,7 @@ app.use(
 
 //cors 
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: process.env.CORS_URL,
   credentials: true
 }))
 
