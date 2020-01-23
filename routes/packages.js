@@ -111,7 +111,7 @@ router.post('/:pageHandle/:packageId', packagePurchaseUpload, async (req, res) =
         console.log(req.body)
         const selectedPage = await Page.findOne({ pageHandle: req.params.pageHandle })
         const packagePurchased = await Packages.findOne({ _id: req.params.packageId })
-        const amount = packagePurchased.price
+        const amount = req.body.amount
         const customer = await stripe.customers.create({
             email: req.body.receipt_email,
             source: req.body.source
