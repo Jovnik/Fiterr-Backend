@@ -63,7 +63,7 @@ router.post('/login', [
       });
       return res.status(200).json(req.user);
     }
-  })
+  })(req, res)
 });
 
 // @route       /api/users/logout
