@@ -7,6 +7,8 @@ const Reply = require('../models/Reply');
 const multer = require('multer');
 const AWS = require('aws-sdk');
 
+const uploadImage = require('../utils/utils');
+
 const storage = multer.memoryStorage();
 
 const fields = [
@@ -15,10 +17,11 @@ const fields = [
   { name: "postDescription" }
 ];
 const upload = multer({ storage: storage }).fields(fields);
-const s3credentials = new AWS.S3({
-  accessKeyId: process.env.ACCESSKEYID,
-  secretAccessKey: process.env.SECRETACCESSKEY
-});
+
+// const s3credentials = new AWS.S3({
+//   accessKeyId: process.env.ACCESSKEYID,
+//   secretAccessKey: process.env.SECRETACCESSKEY
+// });
 
 
 router.get('/page-posts/:id', async(req, res) => {
@@ -63,7 +66,7 @@ router.get('/newsfeed', async (req, res) => {
       newsfeedPosts = [...newsfeedPosts, ...posts];
     }
     const sortedPosts = newsfeedPosts.sort((post1, post2) => new Date(post2.date) - new Date(post1.date));
-    res.status(200).json(newsfeedPosts);
+    res.status(200).json(newsfeedPosts);  // should this be sorted posts?
   } catch (err) {
     res.status(500).send(err)
   }
@@ -99,45 +102,58 @@ router.post('/create-post', upload, async (req, res) => {
         const { postDescription, postOwnerPage } = req.body;
         const { image } = req.files
 
-        console.log('HERE', postDescription, image, postOwnerPage);
+        // console.log('----', image);
 
         let imageUrl = null;
-
-        if(image){
-            const uniqueTimeValue = (Date.now()).toString();
-            const name = image[0].originalname + image[0].size + req.user._id + uniqueTimeValue;
-
-            const fileParams = {
-                Bucket: process.env.BUCKET,
-                Body: image[0].buffer,
-                Key: name,
-                ACL: 'public-read',
-                ContentType: image[0].mimetype
-            }
-
-            const data = await s3credentials.upload(fileParams).promise();
-            imageUrl = data.Location;
-            console.log(imageUrl);
+        // if theres an image, upload it to S3 and return its url. Add the image to your profiles images.
+        if(image) { 
+          imageUrl = await uploadImage(image, req.user._id)
+          const profile = await Profile.findOne({ user: req.user._id });
+          profile.images.push(imageUrl);
+          await profile.save();
         }
-
+        
         const newPost = new Post({
             postOwnerUser: req.user._id,
             postOwnerPage: postOwnerPage,
             content: postDescription,
             image: imageUrl
         });
+
         const { _id } = await newPost.save();
         const savedPost = await Post.findById(_id).populate({path: 'postOwnerUser', select: 'firstname lastname', populate: {path: 'profile', select: 'displayImage'}})
+        // console.log('savedPost', savedPost)
 
-        console.log('savedPost', savedPost)
-
-        res.send(savedPost);
+        res.json(savedPost);
 
     } catch (err) {
         console.error('ERROR', err.message);
         res.status(500).send(err)
     };
 });
+
+// Edit the post
+router.put('/:id/edit', async(req, res) => {
+  try {
+    
+    const { id } = req.params;
+    const { editText } = req.body;
+
+    const post = await Post.findById(id);
+    console.log('The post that we are going to modify is', post);
+    post.content = editText;
+    await post.save();
+
+    // console.log('edited post', editedPost);
+
+    // res.status(200).json(editedPost)
+    res.status(200).json('Post edited')
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).send('Server Error');
+  }
+})
 
 
 // @route       /api/posts/delete-post/:id
@@ -170,7 +186,6 @@ router.put('/like/:id', async (req, res) => {
     }
 
     post.likes.unshift({ user: req.user.id });
-
     await post.save();
 
     res.status(200).json(post.likes);
@@ -196,7 +211,6 @@ router.put('/unlike/:id', async (req, res) => {
     const removeIndex = post.likes.map(like => like.user.toString()).indexOf(req.user.id);
 
     post.likes.splice(removeIndex, 1);
-
     await post.save();
 
     res.status(200).json(post.likes);

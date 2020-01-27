@@ -12,14 +12,14 @@ const storage = multer.memoryStorage()
 
 mongoose.set('useFindAndModify', false);
 
-
-
+const uploadImage = require('../utils/utils');
 
 
 // @route       /api/profiles/create
 // @desc        Create a profile
 const profileFields = [
     { name: 'image' },
+    { name: 'coverImage' },
     { name: 'aboutMe' },
     { name: 'fitnessInterests' },
     { name: 'time' },
@@ -34,11 +34,11 @@ let s3credentials = new AWS.S3({
     accessKeyId: process.env.ACCESSKEYID,
     secretAccessKey: process.env.SECRETACCESSKEY
 });
+
 router.post('/create', profileUpload, async (req, res) => {
     try {
-        const { aboutMe, fitnessInterests } = req.body
-
-        const { image } = req.files
+        const { aboutMe, fitnessInterests } = req.body;
+        const { image, coverImage } = req.files;
 
         let imageUrl = null;
         let imagesArr = [];
@@ -85,11 +85,56 @@ router.post('/create', profileUpload, async (req, res) => {
     }
 })
 
+// Edit the profile
+router.put('/edit', profileUpload, async (req, res) => {
+    try {
+        const { aboutMe, fitnessInterests } = req.body
+        const { image, coverImage } = req.files
+
+        console.log(aboutMe, fitnessInterests);
+        console.log(image, coverImage);
+
+        let imageUrl = null;
+        let coverImageUrl = null;
+
+        const profile = await Profile.findById(req.user.profile);
+        profile.aboutMe = aboutMe;
+        profile.fitnessInterests = fitnessInterests;
+
+        // if theres an image, then we update the displayImage, we also push this image to the images array
+        if(image) {
+            imageUrl = await uploadImage(image, req.user._id)
+            profile.displayImage = imageUrl;
+            profile.images.push(imageUrl);
+        }
+        if(coverImage){
+            coverImageUrl = await uploadImage(coverImage, req.user._id);
+            profile.coverImage = coverImageUrl;
+            profile.images.push(coverImageUrl);
+        }
+
+        await profile.save();
+
+        const editedProfile = await Profile.findOne({ user: req.user.id }).populate([{ path: 'user', select: 'firstname lastname username' }, 
+        {path: 'following', select: 'username', populate: { path: 'profile', select: 'displayImage'}} 
+        ]);
+
+        console.log('the profile we are going to update is', editedProfile)
+
+        return res.status(200).send(editedProfile);
+    } catch (err) {
+        return res.status(500).send(err)
+    }
+})
+
+
 // @route       /api/profiles/me
 // @desc        Get my profile thats linked to the logged in user
 router.get('/me', async (req, res) => {
     try {
-        const myProfile = await Profile.findOne({ user: req.user.id }).populate('user', ['firstname', 'lastname']);
+        const myProfile = await Profile.findOne({ user: req.user.id }).populate([{ path: 'user', select: 'firstname lastname username' }, 
+        {path: 'following', select: 'username', populate: { path: 'profile', select: 'displayImage'}} 
+        ]);
         res.status(200).send(myProfile);
     } catch (err) {
         res.status(500).send(err)
