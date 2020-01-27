@@ -26,7 +26,8 @@ router.post('/session-create', sessionUpload, async (req, res) => {
             trainer: trainer,
             time: time,
             date: date,
-            location: location
+            location: location,
+            enthusiast: req.user._id
         })
         await session.save()
         const subtractQuantityService = await Service.findOne({ _id: serviceID })
@@ -45,7 +46,7 @@ router.post('/session-create', sessionUpload, async (req, res) => {
 // @desc        Any sessions that the user has created gets sent to the trainer to approve
 router.get('/trainer-pending-sessions', async (req, res) => {
     try {
-        const sessions = await Session.find({ trainer: req.user._id, trainerApproval: false })
+        const sessions = await Session.find({ trainer: req.user._id, trainerApproval: false }).populate('enthusiast')
         res.status(200).send(sessions)
     }
     catch (err) {
@@ -57,7 +58,7 @@ router.get('/trainer-pending-sessions', async (req, res) => {
 // @desc        Once approved sessions will GET here
 router.get('/trainer-upcoming-sessions', async (req, res) => {
     try {
-        const sessions = await Session.find({ trainer: req.user._id, trainerApproval: true })
+        const sessions = await Session.find({ trainer: req.user._id, trainerApproval: true }).populate('enthusiast')
         res.status(200).send(sessions)
     } catch (err) {
         res.status(500).send(err)

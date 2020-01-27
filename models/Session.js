@@ -19,6 +19,10 @@ const SessionSchema = mongoose.Schema({
     trainerApproval: {
         type: Boolean,
         default: false
+    },
+    enthusiast: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'user'
     }
 })
 

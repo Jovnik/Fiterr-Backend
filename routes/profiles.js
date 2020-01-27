@@ -239,7 +239,9 @@ router.get('/clients', async (req, res) => {
         sessions.forEach((sesh) => {
             clients.push(sesh.serviceID.enthusiastID)
         })
-        res.status(200).send(clients)
+        const singleClient = new Set(clients)
+        const finalClients = [...singleClient]
+        res.status(200).send(finalClients)
     }
     catch (err) {
         res.status(500).send(err)
