@@ -15,6 +15,7 @@ const ProfileSchema = mongoose.Schema({
     }],
     images: [String],
     displayImage: String, 
+    coverImage: String,
     aboutMe: String,
     fitnessInterests: String,
     user: {

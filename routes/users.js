@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const Profile = require('../models/Profile');
 const Professional = require('../models/Professional')
+const Page = require('../models/Page');
 const { check, validationResult } = require('express-validator');
 const multer = require('multer');
 const storage = multer.memoryStorage();
@@ -76,14 +77,19 @@ router.get('/logout', (req, res) => {
 // @route       /api/users/search-users
 // @desc        search users in the database with the search term entered
 // Note: this needs to be an authenticated route
-router.post('/search-users', async (req, res) => {
+router.post('/search', async (req, res) => {
   try {
-    const { search } = req.body
-    // this query checks whether the firstname or lastname contains the search term
+
+    const { searchTerm: search, filter } = req.body
     const searchRegex = { "$regex": search, "$options": "i" };
-    let searchResults = await User.find({ $or: [{ "firstname": searchRegex }, { "lastname": searchRegex }] });
-    // console.log(searchResults);  // log the users that you find in the search
-    res.status(200).json({ searchedUsers: searchResults });
+    
+    const userResults = await User.find({ $or: [{ "firstname": searchRegex }, { "lastname": searchRegex }] }).select('firstname lastname username').populate('profile', 'displayImage');
+    const pageResults = await Page.find({ $or: [{ "pageHandle": searchRegex }, { "pageTitle": searchRegex }] })
+
+    if(filter === 'all') { res.json([...pageResults, ...userResults])}
+    else if (filter === 'enthusiast') { res.json(userResults.sort((a, b) => a.firstname.localeCompare(b.firstname) )) }
+    else if (filter === 'page') { res.json(pageResults.sort((a, b) => a.pageTitle.localeCompare(b.pageTitle))) }
+
   } catch (err) {
     res.status(500).send(err)
   }
