@@ -15,7 +15,7 @@
   "dependencies": {
     "aws-sdk": "^2.585.0",
     "bcryptjs": "^2.4.3",
-    "config": "^3.2.4",
+    "config": "^3.3.8",
     "connect-mongo": "^3.2.0",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
